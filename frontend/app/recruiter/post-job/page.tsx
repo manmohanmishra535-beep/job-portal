@@ -3,9 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Briefcase, ArrowLeft, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, AlertCircle, CheckCircle2, Lightbulb, Sparkles } from 'lucide-react';
 import { jobsApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
+import Button from '@/components/ui/Button';
+import { Field, Input, Textarea, Select } from '@/components/ui/Field';
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -44,7 +46,10 @@ export default function PostJobPage() {
         experienceLevel: formData.experienceLevel,
         salaryMin: Number(formData.salaryMin),
         salaryMax: Number(formData.salaryMax),
-        skills: formData.skills.split(',').map((s) => s.trim()).filter(Boolean),
+        skills: formData.skills
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
       };
 
       await jobsApi.create(payload, token);
@@ -60,176 +65,200 @@ export default function PostJobPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Back Link */}
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       <Link
         href="/recruiter"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Recruiter Dashboard
+        <ArrowLeft className="h-4 w-4" /> Back to Recruiter Dashboard
       </Link>
 
-      <div className="glass-panel rounded-3xl p-6 sm:p-10 border border-white/10 space-y-6">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400 block mb-1">
-            Recruiter Listing Form
-          </span>
-          <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-white">
-            Create New Job Opportunity
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Publish an engineering opening to candidate search results and automated skill match feeds.
-          </p>
+      <header>
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+          <Sparkles className="h-4 w-4" />
+          Recruiter Listing Form
         </div>
+        <h1 className="font-heading text-3xl font-extrabold text-white">
+          Create New Job Opportunity
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          Publish an engineering opening to candidate search results and automated skill match
+          feeds.
+        </p>
+      </header>
 
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            {error}
-          </div>
-        )}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <form
+          onSubmit={handleSubmit}
+          className="glass-panel space-y-6 rounded-3xl p-6 sm:p-8 lg:col-span-2"
+        >
+          {error && (
+            <div
+              role="alert"
+              className="flex items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-xs text-rose-300"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
 
-        {success && (
-          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            Job posted successfully! Redirecting to dashboard...
-          </div>
-        )}
+          {success && (
+            <div
+              role="status"
+              className="flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-xs text-emerald-300"
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              Job posted successfully! Redirecting to dashboard...
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-              Job Title *
-            </label>
-            <input
+          <Field label="Job Title" htmlFor="job-title" required>
+            <Input
+              id="job-title"
               type="text"
               required
               placeholder="e.g. SDE-1 Backend Systems"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-indigo-500"
             />
-          </div>
+          </Field>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Location *
-              </label>
-              <input
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Location" htmlFor="job-location" required>
+              <Input
+                id="job-location"
                 type="text"
                 required
                 placeholder="e.g. Bengaluru, India / Remote"
                 value={formData.location}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-indigo-500"
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Job Type *
-              </label>
-              <select
+            <Field label="Job Type" htmlFor="job-type" required>
+              <Select
+                id="job-type"
                 value={formData.jobType}
                 onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-[#0f172a] border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
               >
-                <option value="FULL_TIME">Full Time</option>
-                <option value="PART_TIME">Part Time</option>
-                <option value="INTERNSHIP">Internship</option>
-                <option value="CONTRACT">Contract</option>
-              </select>
-            </div>
+                <option value="FULL_TIME" className="bg-[#0b111e]">
+                  Full Time
+                </option>
+                <option value="PART_TIME" className="bg-[#0b111e]">
+                  Part Time
+                </option>
+                <option value="INTERNSHIP" className="bg-[#0b111e]">
+                  Internship
+                </option>
+                <option value="CONTRACT" className="bg-[#0b111e]">
+                  Contract
+                </option>
+              </Select>
+            </Field>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Experience Tier *
-              </label>
-              <select
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="Experience Tier" htmlFor="job-experience" required>
+              <Select
+                id="job-experience"
                 value={formData.experienceLevel}
                 onChange={(e) => setFormData({ ...formData, experienceLevel: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-xl bg-[#0f172a] border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500 cursor-pointer"
               >
-                <option value="Fresher">Fresher (0-1 yr)</option>
-                <option value="Mid">Mid-Level (1-3 yrs)</option>
-                <option value="Senior">Senior (3+ yrs)</option>
-              </select>
-            </div>
+                <option value="Fresher" className="bg-[#0b111e]">
+                  Fresher (0-1 yr)
+                </option>
+                <option value="Mid" className="bg-[#0b111e]">
+                  Mid-Level (1-3 yrs)
+                </option>
+                <option value="Senior" className="bg-[#0b111e]">
+                  Senior (3+ yrs)
+                </option>
+              </Select>
+            </Field>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Min Salary (INR / Year)
-              </label>
-              <input
+            <Field label="Min Salary (INR / Year)" htmlFor="job-salary-min">
+              <Input
+                id="job-salary-min"
                 type="number"
                 placeholder="e.g. 1800000"
                 value={formData.salaryMin}
                 onChange={(e) => setFormData({ ...formData, salaryMin: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Max Salary (INR / Year)
-              </label>
-              <input
+            <Field label="Max Salary (INR / Year)" htmlFor="job-salary-max">
+              <Input
+                id="job-salary-max"
                 type="number"
                 placeholder="e.g. 3000000"
                 value={formData.salaryMax}
                 onChange={(e) => setFormData({ ...formData, salaryMax: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500"
               />
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-              Required Skills (Comma separated) *
-            </label>
-            <input
+          <Field
+            label="Required Skills"
+            htmlFor="job-skills"
+            required
+            hint="Comma separated. These power the skill-match feed."
+          >
+            <Input
+              id="job-skills"
               type="text"
               required
               placeholder="e.g. TypeScript, React, Go, Docker, PostgreSQL"
               value={formData.skills}
               onChange={(e) => setFormData({ ...formData, skills: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-indigo-500 font-mono"
+              className="font-mono"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-              Role Description & Candidate Requirements *
-            </label>
-            <textarea
+          <Field label="Role Description & Candidate Requirements" htmlFor="job-description" required>
+            <Textarea
+              id="job-description"
               required
               rows={5}
               placeholder="Detail team objectives, day-to-day responsibilities, tech stack, and key requirements..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-400 text-sm focus:outline-none focus:border-indigo-500"
             />
-          </div>
+          </Field>
 
-          <div className="pt-4 flex items-center justify-end gap-4 border-t border-white/10">
+          <div className="flex items-center justify-end gap-3 border-t border-white/10 pt-6">
             <Link
               href="/recruiter"
-              className="px-5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="rounded-xl px-5 py-2.5 text-xs font-semibold text-slate-400 transition-colors hover:bg-white/5 hover:text-white"
             >
               Cancel
             </Link>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-7 py-3 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/25 hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50"
-            >
+            <Button type="submit" size="lg" disabled={submitting}>
               {submitting ? 'Publishing...' : 'Publish Job Listing'}
-            </button>
+            </Button>
           </div>
         </form>
+
+        {/* Tips */}
+        <aside className="space-y-6">
+          <div className="glass-panel space-y-4 rounded-3xl p-6">
+            <h2 className="flex items-center gap-2 font-heading text-base font-bold text-white">
+              <Lightbulb className="h-4 w-4 text-amber-400" /> Listing tips
+            </h2>
+            <ul className="space-y-2.5 text-xs leading-relaxed text-slate-300">
+              {[
+                'Lead with the concrete role title candidates actually search for.',
+                'List 4–6 core skills so the skill-match feed stays precise.',
+                'Quantify scope in the description (team size, scale, impact).',
+                'State a realistic salary range to maximise qualified applies.',
+              ].map((tip, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="font-bold text-amber-400">•</span>
+                  {tip}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
       </div>
     </div>
   );

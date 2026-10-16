@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import QuizEngine from '@/components/QuizEngine';
+import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
 import { Quiz } from '@/types';
 import { quizApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
@@ -73,19 +74,38 @@ export default function ActiveQuizPage() {
 
   if (loading || !quiz) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm text-gray-400">Loading assessment questions...</p>
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-10 sm:px-6 lg:px-8">
+        <Skeleton className="h-4 w-40" />
+        <div className="glass-panel space-y-4 rounded-2xl p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-56" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+            <Skeleton className="h-9 w-24 rounded-xl" />
+          </div>
+          <Skeleton className="h-1.5 w-full rounded-full" />
+        </div>
+        <div className="glass-panel space-y-6 rounded-3xl p-6 sm:p-8">
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-6 w-3/4" />
+          <SkeletonText lines={2} />
+          <div className="space-y-3 pt-2">
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-14 w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       {/* Back Link */}
       <Link
         href="/prep/quiz"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
       >
         <ArrowLeft className="w-4 h-4" /> Exit Quiz & Back to Tests
       </Link>

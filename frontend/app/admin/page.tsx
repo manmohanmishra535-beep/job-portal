@@ -1,21 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import {
-  ShieldAlert,
-  Users,
-  Briefcase,
-  Award,
-  CheckCircle2,
-  XCircle,
-  Lock,
-  ChevronRight,
-  BookOpen,
-} from 'lucide-react';
+import { Lock, Users, Briefcase, FileText, Award, ShieldCheck } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
 import { formatDate } from '@/lib/utils';
+import StatCard from '@/components/ui/StatCard';
+import EmptyState from '@/components/ui/EmptyState';
+import Badge, { BadgeTone } from '@/components/ui/Badge';
+import { StatCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
+
+function roleTone(role: string): BadgeTone {
+  switch (role) {
+    case 'ADMIN':
+      return 'rose';
+    case 'RECRUITER':
+      return 'indigo';
+    default:
+      return 'neutral';
+  }
+}
 
 export default function AdminDashboardPage() {
   const { getToken } = useAuth();
@@ -61,9 +65,7 @@ export default function AdminDashboardPage() {
       const token = await getToken();
       if (token) {
         await adminApi.changeRole(userId, newRole, token);
-        setUsersList((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-        );
+        setUsersList((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
       }
     } catch (err) {
       console.error('Failed to update role:', err);
@@ -72,111 +74,152 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border border-white/10">
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-rose-400 block mb-1 flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" /> Platform Governance & Moderation
+      <section className="glass-panel relative overflow-hidden rounded-3xl p-6 sm:p-8">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-rose-500/15 blur-3xl"
+        />
+        <div className="relative">
+          <span className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-rose-400">
+            <Lock className="h-3.5 w-3.5" /> Platform Governance &amp; Moderation
           </span>
-          <h1 className="font-heading font-extrabold text-3xl text-white">
-            Admin Command Center
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Monitor platform-wide traffic, verify recruiter companies, and manage placement prep content.
+          <h1 className="font-heading text-3xl font-extrabold text-white">Admin Command Center</h1>
+          <p className="mt-1.5 max-w-xl text-sm text-slate-400">
+            Monitor platform-wide traffic, verify recruiter companies, and manage placement prep
+            content.
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* Platform-Wide Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="glass-panel rounded-2xl p-5 border border-white/5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
-            Total Users
-          </span>
-          <span className="font-heading font-extrabold text-2xl sm:text-3xl text-white">
-            {stats.users?.total || 0}
-          </span>
-          <p className="text-[11px] text-gray-400 mt-1">
-            {stats.users?.candidates || 0} Candidates • {stats.users?.recruiters || 0} Recruiters
-          </p>
-        </div>
+      {/* Metrics */}
+      <section className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+        {loading ? (
+          <>
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+            <StatCardSkeleton />
+          </>
+        ) : (
+          <>
+            <StatCard
+              icon={Users}
+              label="Total Users"
+              value={stats.users?.total || 0}
+              hint={`${stats.users?.candidates || 0} candidates • ${stats.users?.recruiters || 0} recruiters`}
+              tone="indigo"
+            />
+            <StatCard
+              icon={Briefcase}
+              label="Job Listings"
+              value={stats.jobs?.total || 0}
+              hint={`${stats.jobs?.active || 0} currently open`}
+              tone="cyan"
+            />
+            <StatCard
+              icon={FileText}
+              label="Applications"
+              value={stats.applications || 0}
+              hint="Platform submissions"
+              tone="violet"
+            />
+            <StatCard
+              icon={Award}
+              label="Quizzes Taken"
+              value={stats.prep?.quizzesAttempted || 0}
+              hint={`${stats.prep?.totalQuestions || 0} questions in bank`}
+              tone="emerald"
+            />
+          </>
+        )}
+      </section>
 
-        <div className="glass-panel rounded-2xl p-5 border border-white/5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
-            Total Job Listings
-          </span>
-          <span className="font-heading font-extrabold text-2xl sm:text-3xl text-indigo-400 font-mono">
-            {stats.jobs?.total || 0}
-          </span>
-          <p className="text-[11px] text-gray-400 mt-1">{stats.jobs?.active || 0} currently OPEN</p>
-        </div>
-
-        <div className="glass-panel rounded-2xl p-5 border border-white/5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
-            Applications Processed
-          </span>
-          <span className="font-heading font-extrabold text-2xl sm:text-3xl text-cyan-400 font-mono">
-            {stats.applications || 0}
-          </span>
-          <p className="text-[11px] text-gray-400 mt-1">Platform submissions</p>
-        </div>
-
-        <div className="glass-panel rounded-2xl p-5 border border-white/5">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">
-            Quizzes Taken
-          </span>
-          <span className="font-heading font-extrabold text-2xl sm:text-3xl text-emerald-400 font-mono">
-            {stats.prep?.quizzesAttempted || 0}
-          </span>
-          <p className="text-[11px] text-gray-400 mt-1">Anti-cheat evaluations</p>
-        </div>
-      </div>
-
-      {/* User Management & Role Control */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
-          <h2 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-400" /> User Accounts & Role Permissions
+      {/* User management */}
+      <section className="glass-panel space-y-6 rounded-3xl p-6 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <h2 className="flex items-center gap-2 font-heading text-xl font-bold text-white">
+            <ShieldCheck className="h-5 w-5 text-indigo-400" /> User Accounts &amp; Role Permissions
           </h2>
-          <span className="text-xs text-gray-400 font-medium">Role-Based Access Control (RBAC)</span>
+          <span className="text-xs font-medium text-slate-400">
+            Role-Based Access Control (RBAC)
+          </span>
         </div>
 
-        <div className="divide-y divide-white/5 overflow-x-auto">
-          {usersList.map((user) => (
-            <div
-              key={user.id}
-              className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-            >
-              <div>
-                <h3 className="font-semibold text-sm text-white">{user.name || 'Unnamed User'}</h3>
-                <p className="text-xs text-gray-400">
-                  {user.email} • Joined {formatDate(user.createdAt)}
-                </p>
-                {user.companies && user.companies.length > 0 && (
-                  <span className="text-[11px] text-amber-400 font-medium mt-1 inline-block">
-                    Company: {user.companies[0].name} (
-                    {user.companies[0].isApproved ? 'Approved' : 'Pending Approval'})
-                  </span>
-                )}
-              </div>
+        {loading ? (
+          <div className="space-y-4">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+            ))}
+          </div>
+        ) : usersList.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="No user accounts found"
+            description="User accounts will appear here once candidates and recruiters sign up."
+            className="border-0 bg-transparent py-10 shadow-none"
+          />
+        ) : (
+          <ul className="divide-y divide-white/5">
+            {usersList.map((user) => (
+              <li
+                key={user.id}
+                className="flex flex-col justify-between gap-4 py-4 sm:flex-row sm:items-center"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-gradient-to-tr from-slate-800 to-slate-700 text-sm font-bold text-white">
+                    {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-sm font-semibold text-white">
+                        {user.name || 'Unnamed User'}
+                      </h3>
+                      <Badge tone={roleTone(user.role)} uppercase>
+                        {user.role}
+                      </Badge>
+                    </div>
+                    <p className="truncate text-xs text-slate-400">
+                      {user.email} • Joined {formatDate(user.createdAt)}
+                    </p>
+                    {user.companies && user.companies.length > 0 && (
+                      <span className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-300">
+                        Company: {user.companies[0].name}
+                        <Badge tone={user.companies[0].isApproved ? 'emerald' : 'amber'}>
+                          {user.companies[0].isApproved ? 'Approved' : 'Pending'}
+                        </Badge>
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400">Change Role:</span>
-                <select
-                  value={user.role}
-                  onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                >
-                  <option value="USER" className="bg-[#0f172a]">Candidate (USER)</option>
-                  <option value="RECRUITER" className="bg-[#0f172a]">Recruiter (RECRUITER)</option>
-                  <option value="ADMIN" className="bg-[#0f172a]">Administrator (ADMIN)</option>
-                </select>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <label className="sr-only" htmlFor={`role-${user.id}`}>
+                    Change role for {user.name || user.email}
+                  </label>
+                  <select
+                    id={`role-${user.id}`}
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                    className="cursor-pointer rounded-xl border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors focus:border-indigo-500/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
+                  >
+                    <option value="USER" className="bg-[#0b111e]">
+                      Candidate (USER)
+                    </option>
+                    <option value="RECRUITER" className="bg-[#0b111e]">
+                      Recruiter (RECRUITER)
+                    </option>
+                    <option value="ADMIN" className="bg-[#0b111e]">
+                      Administrator (ADMIN)
+                    </option>
+                  </select>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

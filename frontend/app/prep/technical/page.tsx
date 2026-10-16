@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Cpu, Database, Network, Layout, ArrowLeft } from 'lucide-react';
+import { BookOpen, Cpu, Database, Network, ArrowLeft } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import RichText from '@/components/ui/RichText';
 
 const SUBJECTS = [
   {
@@ -80,62 +83,70 @@ export default function TechnicalPrepPage() {
   const [activeSubject, setActiveSubject] = useState(SUBJECTS[0]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Back Link */}
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       <Link
         href="/prep"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Prep Hub
+        <ArrowLeft className="h-4 w-4" /> Back to Prep Hub
       </Link>
 
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-purple-400 font-semibold text-xs uppercase tracking-wider mb-2">
-          <BookOpen className="w-4 h-4" />
+      <header>
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-purple-400">
+          <BookOpen className="h-4 w-4" />
           Core Engineering Disciplines
         </div>
-        <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
+        <h1 className="font-heading text-3xl font-extrabold text-white sm:text-4xl">
           Core Computer Science Cheat Sheets
         </h1>
-        <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-          Concise revision sheets for Operating Systems, Relational DBMS/SQL, and Computer Networks tested in technical interview rounds.
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          Concise revision sheets for Operating Systems, Relational DBMS/SQL, and Computer Networks
+          tested in technical interview rounds.
         </p>
-      </div>
+      </header>
 
-      {/* Subject Selector Tabs */}
-      <div className="flex flex-wrap gap-2 pb-2 border-b border-white/10">
+      {/* Subject tabs */}
+      <div
+        role="tablist"
+        aria-label="Subjects"
+        className="flex flex-wrap gap-2 border-b border-white/10 pb-3"
+      >
         {SUBJECTS.map((sub) => {
-          const Icon = sub.icon;
+          const Icon = sub.icon as LucideIcon;
           const isActive = activeSubject.id === sub.id;
           return (
             <button
               key={sub.id}
+              role="tab"
+              aria-selected={isActive}
               onClick={() => setActiveSubject(sub)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+              className={cn(
+                'flex items-center gap-2 rounded-xl border px-4 py-2 text-xs font-semibold transition-all duration-200',
                 isActive
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25'
-                  : 'glass-panel text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+                  ? 'border-purple-500/50 bg-purple-600 text-white shadow-[0_10px_30px_-14px_rgba(168,85,247,0.9)]'
+                  : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+              )}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="h-4 w-4" />
               {sub.name}
             </button>
           );
         })}
       </div>
 
-      {/* Topics Stack */}
+      {/* Topics */}
       <div className="grid grid-cols-1 gap-6">
         {activeSubject.topics.map((t, idx) => (
-          <div key={idx} className="glass-panel rounded-3xl p-6 sm:p-8 space-y-3">
-            <h3 className="font-heading font-bold text-xl text-white text-indigo-300">
-              {t.title}
-            </h3>
-            <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-line font-sans">
-              {t.content}
+          <section key={idx} className="glass-panel space-y-3 rounded-3xl p-6 sm:p-8">
+            <div className="flex items-center gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-violet-500/25 bg-violet-500/10 font-mono text-xs font-bold text-violet-300">
+                {String(idx + 1).padStart(2, '0')}
+              </span>
+              <h3 className="font-heading text-xl font-bold text-indigo-200">{t.title}</h3>
             </div>
-          </div>
+            <RichText content={t.content} />
+          </section>
         ))}
       </div>
     </div>

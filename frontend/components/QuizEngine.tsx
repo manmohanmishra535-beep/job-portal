@@ -1,10 +1,22 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Timer, CheckCircle, XCircle, Award, RotateCcw, AlertTriangle, ArrowRight, ArrowLeft } from 'lucide-react';
+import {
+  Timer,
+  CheckCircle,
+  XCircle,
+  Award,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+} from 'lucide-react';
 import { Quiz } from '@/types';
 import { quizApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
+import { cn } from '@/lib/utils';
+import Badge, { difficultyTone } from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
+import ProgressBar from '@/components/ui/ProgressBar';
 
 interface QuizEngineProps {
   quiz: Quiz;
@@ -88,91 +100,115 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
 
   if (!currentQ && !result) {
     return (
-      <div className="glass-panel rounded-2xl p-8 text-center text-gray-400">
+      <div className="glass-panel rounded-2xl p-8 text-center text-sm text-slate-400">
         No questions loaded for this quiz.
       </div>
     );
   }
 
-  // Results View
+  // Results view
   if (result) {
     return (
-      <div className="space-y-8 animate-in fade-in">
-        {/* Scorecard Hero */}
-        <div className="glass-panel rounded-3xl p-8 text-center relative overflow-hidden">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white mx-auto shadow-xl shadow-indigo-500/30 mb-4">
-            <Award className="w-10 h-10" />
-          </div>
-
-          <h2 className="font-heading font-extrabold text-3xl text-white">Quiz Evaluation Completed</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Scored by backend evaluation engine against master answer keys.
-          </p>
-
-          <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-6">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-xs text-gray-400 uppercase tracking-wider block">Score</span>
-              <span className="font-heading font-bold text-2xl text-white">
-                {result.score} / {result.totalQuestions}
-              </span>
+      <div className="animate-fade-in space-y-8">
+        {/* Scorecard */}
+        <div className="glass-panel relative overflow-hidden rounded-3xl p-8 text-center">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-20 left-1/2 h-52 w-52 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-3xl"
+          />
+          <div className="relative">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/30">
+              <Award className="h-10 w-10" />
             </div>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-xs text-gray-400 uppercase tracking-wider block">Accuracy</span>
-              <span className="font-heading font-bold text-2xl text-emerald-400 font-mono">
-                {result.percentage}%
-              </span>
-            </div>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-xs text-gray-400 uppercase tracking-wider block">Time Taken</span>
-              <span className="font-heading font-bold text-2xl text-cyan-400 font-mono">
-                {formatTime(result.timeTaken)}
-              </span>
+
+            <h2 className="font-heading text-3xl font-extrabold text-white">
+              Quiz Evaluation Completed
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Scored by the backend evaluation engine against master answer keys.
+            </p>
+
+            <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-4">
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                <span className="block text-xs uppercase tracking-wider text-slate-400">Score</span>
+                <span className="font-heading text-2xl font-bold text-white">
+                  {result.score} / {result.totalQuestions}
+                </span>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                <span className="block text-xs uppercase tracking-wider text-slate-400">
+                  Accuracy
+                </span>
+                <span className="font-mono font-heading text-2xl font-bold text-emerald-400">
+                  {result.percentage}%
+                </span>
+              </div>
+              <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                <span className="block text-xs uppercase tracking-wider text-slate-400">
+                  Time Taken
+                </span>
+                <span className="font-mono font-heading text-2xl font-bold text-cyan-400">
+                  {formatTime(result.timeTaken)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Detailed Review Breakdown */}
+        {/* Review */}
         <div className="space-y-4">
-          <h3 className="font-heading font-bold text-xl text-white">Answers & Explanations Review</h3>
+          <h3 className="font-heading text-xl font-bold text-white">
+            Answers &amp; Explanations Review
+          </h3>
           <div className="space-y-4">
             {result.results?.map((item: any, idx: number) => (
               <div
                 key={item.questionId}
-                className={`glass-panel rounded-2xl p-6 border ${
-                  item.isCorrect ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-rose-500/30 bg-rose-950/10'
-                }`}
+                className={cn(
+                  'glass-panel rounded-2xl border p-6',
+                  item.isCorrect
+                    ? 'border-emerald-500/30 bg-emerald-950/10'
+                    : 'border-rose-500/30 bg-rose-950/10'
+                )}
               >
-                <div className="flex items-start justify-between gap-4 mb-3">
+                <div className="mb-3 flex items-start justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-mono text-gray-400">#{idx + 1}</span>
-                    <h4 className="font-semibold text-white text-base">{item.title}</h4>
+                    <span className="font-mono text-xs text-slate-400">#{idx + 1}</span>
+                    <h4 className="text-base font-semibold text-white">{item.title}</h4>
                   </div>
-                  {item.isCorrect ? (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                      <CheckCircle className="w-3.5 h-3.5" /> Correct
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-xs font-semibold text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded-full border border-rose-500/20">
-                      <XCircle className="w-3.5 h-3.5" /> Incorrect
-                    </span>
-                  )}
+                  <Badge tone={item.isCorrect ? 'emerald' : 'rose'}>
+                    {item.isCorrect ? (
+                      <>
+                        <CheckCircle className="h-3.5 w-3.5" /> Correct
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-3.5 w-3.5" /> Incorrect
+                      </>
+                    )}
+                  </Badge>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-3">
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-gray-400 block mb-1">Your Submission:</span>
-                    <span className={item.isCorrect ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'}>
+                <div className="mb-3 grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
+                  <div className="rounded-lg border border-white/5 bg-black/30 p-3">
+                    <span className="mb-1 block text-slate-400">Your Submission:</span>
+                    <span
+                      className={cn(
+                        'font-medium',
+                        item.isCorrect ? 'text-emerald-400' : 'text-rose-400'
+                      )}
+                    >
                       {item.candidateAnswer}
                     </span>
                   </div>
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-gray-400 block mb-1">Correct Answer:</span>
-                    <span className="text-emerald-400 font-medium">{item.correctAnswer}</span>
+                  <div className="rounded-lg border border-white/5 bg-black/30 p-3">
+                    <span className="mb-1 block text-slate-400">Correct Answer:</span>
+                    <span className="font-medium text-emerald-400">{item.correctAnswer}</span>
                   </div>
                 </div>
 
                 {item.explanation && (
-                  <p className="text-xs text-gray-300 bg-white/5 p-3 rounded-lg border border-white/5 leading-relaxed">
+                  <p className="rounded-lg border border-white/5 bg-white/5 p-3 text-xs leading-relaxed text-slate-300">
                     <strong className="text-indigo-300">Explanation:</strong> {item.explanation}
                   </p>
                 )}
@@ -184,99 +220,110 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
     );
   }
 
-  // Active Quiz Running
+  // Active quiz
   return (
     <div className="space-y-6">
-      {/* Top Banner: Quiz Title, Question Progress, Timer */}
-      <div className="glass-panel rounded-2xl p-5 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="font-heading font-bold text-lg text-white">{quiz.title}</h2>
-          <span className="text-xs text-gray-400">
-            Question {currentIdx + 1} of {questions.length}
-          </span>
+      {/* Header */}
+      <div className="glass-panel space-y-4 rounded-2xl p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-heading text-lg font-bold text-white">{quiz.title}</h2>
+            <span className="text-xs text-slate-400">
+              Question {currentIdx + 1} of {questions.length}
+            </span>
+          </div>
+
+          <div
+            role="timer"
+            className={cn(
+              'flex items-center gap-2 rounded-xl border px-4 py-2 font-mono text-sm font-bold',
+              timeLeft < 180
+                ? 'animate-pulse border-rose-500/30 bg-rose-500/10 text-rose-400'
+                : 'border-white/10 bg-white/5 text-cyan-400'
+            )}
+          >
+            <Timer className="h-4 w-4" />
+            {formatTime(timeLeft)}
+          </div>
         </div>
 
-        <div
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-sm font-bold border ${
-            timeLeft < 180
-              ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse'
-              : 'bg-white/5 text-cyan-400 border-white/10'
-          }`}
-        >
-          <Timer className="w-4 h-4" />
-          {formatTime(timeLeft)}
-        </div>
+        <ProgressBar
+          value={currentIdx + 1}
+          max={questions.length}
+          label="Quiz progress"
+        />
       </div>
 
-      {/* Question Card */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+      {/* Question */}
+      <div className="glass-panel space-y-6 rounded-3xl p-6 sm:p-8">
         <div>
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
+          <Badge tone={difficultyTone(currentQ.difficulty)} uppercase>
             {currentQ.difficulty}
-          </span>
-          <h3 className="font-heading font-bold text-xl text-white mt-3 leading-snug">
+          </Badge>
+          <h3 className="mt-3 font-heading text-xl font-bold leading-snug text-white">
             {currentQ.title}
           </h3>
-          <p className="text-sm text-gray-300 mt-2 leading-relaxed">{currentQ.body}</p>
+          <p className="mt-2 text-sm leading-relaxed text-slate-300">{currentQ.body}</p>
         </div>
 
-        {/* Options */}
-        <div className="space-y-3">
+        <div role="radiogroup" aria-label="Answer options" className="space-y-3">
           {currentQ.options?.map((opt, optIdx) => {
             const isSelected = answers[currentQ.id] === opt;
             return (
               <button
                 key={optIdx}
+                role="radio"
+                aria-checked={isSelected}
                 onClick={() => handleSelectOption(opt)}
-                className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between ${
+                className={cn(
+                  'flex w-full items-center justify-between gap-3 rounded-xl border p-4 text-left transition-all duration-200',
                   isSelected
-                    ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-500/10'
-                    : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:bg-white/10'
-                }`}
+                    ? 'border-indigo-500 bg-indigo-600/20 text-white shadow-md shadow-indigo-500/10'
+                    : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                )}
               >
-                <div className="flex items-center gap-3">
+                <span className="flex items-center gap-3">
                   <span
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-mono ${
-                      isSelected ? 'bg-indigo-600 text-white' : 'bg-white/10 text-gray-400'
-                    }`}
+                    className={cn(
+                      'flex h-7 w-7 items-center justify-center rounded-lg font-mono text-xs font-bold',
+                      isSelected ? 'bg-indigo-600 text-white' : 'bg-white/10 text-slate-400'
+                    )}
                   >
                     {String.fromCharCode(65 + optIdx)}
                   </span>
                   <span className="text-sm font-medium">{opt}</span>
-                </div>
+                </span>
+                {isSelected && <CheckCircle2 className="h-4 w-4 shrink-0 text-indigo-300" />}
               </button>
             );
           })}
         </div>
 
-        {/* Navigation & Submit Bar */}
-        <div className="flex items-center justify-between pt-6 border-t border-white/10">
-          <button
+        <div className="flex items-center justify-between border-t border-white/10 pt-6">
+          <Button
+            variant="ghost"
             onClick={() => setCurrentIdx((prev) => Math.max(0, prev - 1))}
             disabled={currentIdx === 0}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" /> Previous
-          </button>
+            <ArrowLeft className="h-4 w-4" /> Previous
+          </Button>
 
-          <div className="flex items-center gap-2">
-            {currentIdx < questions.length - 1 ? (
-              <button
-                onClick={() => setCurrentIdx((prev) => Math.min(questions.length - 1, prev + 1))}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/15 transition-colors"
-              >
-                Next <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50"
-              >
-                {isSubmitting ? 'Submitting...' : 'Submit Final Test'}
-              </button>
-            )}
-          </div>
+          {currentIdx < questions.length - 1 ? (
+            <Button
+              variant="secondary"
+              onClick={() => setCurrentIdx((prev) => Math.min(questions.length - 1, prev + 1))}
+            >
+              Next <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="bg-emerald-600 border-emerald-500/50 shadow-[0_10px_30px_-12px_rgba(16,185,129,0.9)] hover:bg-emerald-500"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Final Test'}
+            </Button>
+          )}
         </div>
       </div>
     </div>
