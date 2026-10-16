@@ -1,0 +1,335 @@
+{
+  "info": {
+    "name": "Job Portal & Preparation Platform API",
+    "description": "Comprehensive Postman Collection covering all REST endpoints from Technical Documentation Section 11",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "user_candidate_mock_789",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth & Webhooks",
+      "item": [
+        {
+          "name": "Clerk Webhook (Sync Users)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_mock_001\",\n    \"first_name\": \"Dev\",\n    \"last_name\": \"User\",\n    \"email_addresses\": [{ \"email_address\": \"dev@example.com\" }],\n    \"public_metadata\": { \"role\": \"USER\" }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webhooks/clerk",
+              "host": ["{{baseUrl}}"],
+              "path": ["webhooks", "clerk"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "List Jobs (Public, Cached)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/jobs?q=Backend&experienceLevel=Fresher&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs"],
+              "query": [
+                { "key": "q", "value": "Backend" },
+                { "key": "experienceLevel", "value": "Fresher" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Job Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/jobs/job-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "job-1"]
+            }
+          }
+        },
+        {
+          "name": "Create Job (Recruiter)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Full Stack Engineer (Next.js & Node)\",\n  \"companyId\": \"comp-google\",\n  \"location\": \"Remote / Bengaluru\",\n  \"jobType\": \"FULL_TIME\",\n  \"experienceLevel\": \"Fresher\",\n  \"salaryMin\": 2000000,\n  \"salaryMax\": 3200000,\n  \"skills\": [\"Next.js\", \"TypeScript\", \"PostgreSQL\", \"Redis\"],\n  \"description\": \"Design and implement high-performance web applications and backend microservices.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "Bookmark / Save Job (Candidate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/jobs/job-1/save",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "job-1", "save"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Apply to Job (Candidate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resumeUrl\": \"https://example.com/resume.pdf\",\n  \"coverLetter\": \"Excited to apply for this engineering role with full-stack experience.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/jobs/job-1/apply",
+              "host": ["{{baseUrl}}"],
+              "path": ["jobs", "job-1", "apply"]
+            }
+          }
+        },
+        {
+          "name": "Track My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/applications/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Applicant Status (Recruiter)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SHORTLISTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/applications/app-1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["applications", "app-1", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Preparation",
+      "item": [
+        {
+          "name": "Get Topics (by Category)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/topics?category=DSA",
+              "host": ["{{baseUrl}}"],
+              "path": ["topics"],
+              "query": [{ "key": "category", "value": "DSA" }]
+            }
+          }
+        },
+        {
+          "name": "Get Questions of Topic",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/topics/topic-dsa-arrays/questions?difficulty=Easy",
+              "host": ["{{baseUrl}}"],
+              "path": ["topics", "topic-dsa-arrays", "questions"],
+              "query": [{ "key": "difficulty", "value": "Easy" }]
+            }
+          }
+        },
+        {
+          "name": "Get Company Guides",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/companies",
+              "host": ["{{baseUrl}}"],
+              "path": ["companies"]
+            }
+          }
+        },
+        {
+          "name": "Get Company By Slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/companies/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["companies", "google"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quiz & Tests",
+      "item": [
+        {
+          "name": "List Quizzes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/quizzes",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes"]
+            }
+          }
+        },
+        {
+          "name": "Get Quiz Questions (Anti-Cheat Masked)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/quiz-speed-test",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "quiz-speed-test"]
+            }
+          }
+        },
+        {
+          "name": "Submit Quiz Answers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"answers\": {\n    \"q-apt-1\": \"44 seconds\",\n    \"q-tech-1\": \"Preemptive Scheduling\"\n  },\n  \"timeTaken\": 240\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/quizzes/quiz-speed-test/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["quizzes", "quiz-speed-test", "submit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Progress Tracking",
+      "item": [
+        {
+          "name": "Mark Question Progress (SOLVED)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SOLVED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/progress/questions/q-dsa-1",
+              "host": ["{{baseUrl}}"],
+              "path": ["progress", "questions", "q-dsa-1"]
+            }
+          }
+        },
+        {
+          "name": "Get My Overall Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/progress/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["progress", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recruiter & Admin",
+      "item": [
+        {
+          "name": "Get Recruiter Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/recruiter/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["recruiter", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Admin Platform Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "stats"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
