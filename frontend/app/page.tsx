@@ -4,14 +4,13 @@ import {
   BookOpen,
   Code2,
   Building2,
-  Award,
-  Sparkles,
   ArrowRight,
   CheckCircle,
-  Users,
   Compass,
+  Sparkles,
 } from 'lucide-react';
 import JobCard from '@/components/JobCard';
+import { buttonClasses } from '@/components/ui';
 
 // Featured sample jobs for immediate landing preview
 const FEATURED_JOBS: any[] = [
@@ -74,237 +73,278 @@ const FEATURED_JOBS: any[] = [
   },
 ];
 
+const METRICS = [
+  { value: '500+', label: 'Tech Openings', accent: 'text-white' },
+  { value: '15+', label: 'DSA Topic Sheets', accent: 'text-indigo-400' },
+  { value: '100%', label: 'Free Prep Resources', accent: 'text-cyan-400' },
+  { value: '50+', label: 'Company Exam Guides', accent: 'text-emerald-400' },
+];
+
+const PREP_TRACKS = [
+  {
+    href: '/prep/aptitude',
+    title: 'Quantitative & Logical',
+    desc: 'Speed, Distance, Time, LCM unit method, P&C, probability, and shortcuts.',
+    icon: Compass,
+    tone: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  },
+  {
+    href: '/prep/dsa',
+    title: 'Topic-Wise DSA Sheet',
+    desc: '15+ topics: Arrays, Two Pointers, Trees, Graphs, DP with code & complexities.',
+    icon: Code2,
+    tone: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  },
+  {
+    href: '/prep/technical',
+    title: 'Core CS Subjects',
+    desc: 'Operating Systems (Deadlocks, TLB), DBMS (ACID, B+ Trees), Networks, and OOP.',
+    icon: BookOpen,
+    tone: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  },
+  {
+    href: '/prep/companies',
+    title: 'Company Hiring Guides',
+    desc: 'Google, Amazon, Microsoft, TCS, Infosys selection rounds and exam patterns.',
+    icon: Building2,
+    tone: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  },
+];
+
 export default function HomePage() {
   return (
-    <div className="space-y-24 pb-20">
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-12 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            The Unified Platform for Jobs & Placement Prep
+    <div className="space-y-20 pb-20 sm:space-y-28">
+      {/* Hero */}
+      <section className="relative overflow-hidden pb-14 pt-16 sm:pt-24">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[900px] max-w-full -translate-x-1/2 rounded-full bg-indigo-600/10 blur-[120px]"
+        />
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="animate-fade-in inline-flex items-center gap-2 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300">
+            <Sparkles className="h-4 w-4 text-indigo-400" />
+            The Unified Platform for Jobs &amp; Placement Prep
           </div>
 
-          <h1 className="font-heading font-black text-4xl sm:text-6xl lg:text-7xl tracking-tight text-white max-w-4xl mx-auto leading-tight">
-            Where Top Engineers <br />
-            <span className="text-gradient">Get Hired & Ace Placements</span>
+          <h1 className="mx-auto mt-8 max-w-4xl font-heading text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            Where Top Engineers
+            <br />
+            <span className="text-gradient">Get Hired &amp; Ace Placements</span>
           </h1>
 
-          <p className="text-gray-400 text-base sm:text-lg max-w-2xl mx-auto mt-6 leading-relaxed">
-            Apply to verified software engineering opportunities and master aptitude, topic-wise DSA sheets,
-            core CS subjects, and real company hiring exams in one cohesive environment.
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
+            Apply to verified software engineering opportunities and master aptitude, topic-wise DSA
+            sheets, core CS subjects, and real company hiring exams in one cohesive environment.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/jobs"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+              className={buttonClasses('primary', 'lg', 'w-full px-8 sm:w-auto')}
             >
-              <Briefcase className="w-5 h-5" />
+              <Briefcase className="h-5 w-5" />
               Explore Open Jobs
             </Link>
 
             <Link
               href="/prep"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl font-semibold bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-center gap-2"
+              className={buttonClasses('secondary', 'lg', 'w-full px-8 sm:w-auto')}
             >
-              <BookOpen className="w-5 h-5 text-cyan-400" />
+              <BookOpen className="h-5 w-5 text-cyan-400" />
               Start Preparation Hub
             </Link>
           </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-16 pt-12 border-t border-white/10">
-            <div>
-              <span className="font-heading font-extrabold text-3xl text-white">500+</span>
-              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-                Tech Openings
+          {/* Metrics */}
+          <div className="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-4 border-t border-white/10 pt-12 md:grid-cols-4">
+            {METRICS.map((metric) => (
+              <div key={metric.label} className="glass-panel rounded-2xl p-5">
+                <span
+                  className={`font-heading text-3xl font-extrabold ${metric.accent}`}
+                >
+                  {metric.value}
+                </span>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  {metric.label}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Two pillars */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          {/* Job Portal */}
+          <div className="glass-panel group relative overflow-hidden rounded-3xl p-8 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-400/40 hover:shadow-[0_30px_70px_-40px_rgba(79,70,229,0.9)] sm:p-10">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl"
+            />
+            <div className="relative">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 transition-transform duration-200 group-hover:scale-105">
+                <Briefcase className="h-7 w-7" />
+              </div>
+              <h2 className="mb-3 font-heading text-2xl font-bold text-white">
+                Production Job Portal
+              </h2>
+              <p className="mb-6 text-sm leading-relaxed text-slate-400">
+                Search and filter high-paying engineering roles with transparent salary ranges, tech
+                stacks, experience tiers, and direct recruiter review pipelines.
               </p>
+              <ul className="mb-8 space-y-2.5 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  Real-time application status tracker (Applied → Interview → Hired)
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  Fast multi-criteria search cached in Redis
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
+                  Dedicated Recruiter dashboard for posting jobs and shortlisting talent
+                </li>
+              </ul>
+              <Link
+                href="/jobs"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
+              >
+                Browse Open Roles
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
             </div>
-            <div>
-              <span className="font-heading font-extrabold text-3xl text-indigo-400 font-mono">15+</span>
-              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-                DSA Topic Sheets
+          </div>
+
+          {/* Prep Hub */}
+          <div className="glass-panel group relative overflow-hidden rounded-3xl p-8 transition-all duration-200 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[0_30px_70px_-40px_rgba(6,182,212,0.9)] sm:p-10">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-500/15 blur-3xl"
+            />
+            <div className="relative">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 transition-transform duration-200 group-hover:scale-105">
+                <BookOpen className="h-7 w-7" />
+              </div>
+              <h2 className="mb-3 font-heading text-2xl font-bold text-white">
+                Comprehensive Preparation Hub
+              </h2>
+              <p className="mb-6 text-sm leading-relaxed text-slate-400">
+                Everything needed to crack technical on-campus and off-campus placements: Aptitude
+                formulas, topic-wise DSA sheets, Core CS cheat sheets, and real company interview
+                guides.
               </p>
-            </div>
-            <div>
-              <span className="font-heading font-extrabold text-3xl text-cyan-400 font-mono">100%</span>
-              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-                Free Prep Resources
-              </p>
-            </div>
-            <div>
-              <span className="font-heading font-extrabold text-3xl text-emerald-400 font-mono">50+</span>
-              <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-semibold">
-                Company Exam Guides
-              </p>
+              <ul className="mb-8 space-y-2.5 text-xs text-slate-300">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                  Dedicated DSA Sheet with solve tracking and multi-language solutions
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                  Timed practice tests with anti-cheat backend evaluation
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                  Deep-dive exam patterns and syllabi for Google, Amazon, TCS &amp; more
+                </li>
+              </ul>
+              <Link
+                href="/prep"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 transition-colors hover:text-cyan-300"
+              >
+                Launch Prep Hub
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Two Pillars Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Pillar 1: Job Portal */}
-          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/10 relative overflow-hidden group">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-6">
-              <Briefcase className="w-7 h-7" />
-            </div>
-            <h2 className="font-heading font-bold text-2xl text-white mb-3">
-              Production Job Portal
-            </h2>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Search and filter high-paying engineering roles with transparent salary ranges, tech stacks,
-              experience tiers, and direct recruiter review pipelines.
-            </p>
-            <ul className="space-y-2.5 text-xs text-gray-300 mb-8">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                Real-time application status tracker (Applied → Interview → Hired)
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                Fast multi-criteria search cached in Redis
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                Dedicated Recruiter dashboard for posting jobs and shortlisting talent
-              </li>
-            </ul>
-            <Link
-              href="/jobs"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              Browse Open Roles <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Pillar 2: Prep Hub */}
-          <div className="glass-panel rounded-3xl p-8 sm:p-10 border border-white/10 relative overflow-hidden group">
-            <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center mb-6">
-              <BookOpen className="w-7 h-7" />
-            </div>
-            <h2 className="font-heading font-bold text-2xl text-white mb-3">
-              Comprehensive Preparation Hub
-            </h2>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
-              Everything needed to crack technical on-campus and off-campus placements: Aptitude formulas,
-              topic-wise DSA sheets, Core CS cheat sheets, and real company interview guides.
-            </p>
-            <ul className="space-y-2.5 text-xs text-gray-300 mb-8">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-cyan-400" />
-                Dedicated DSA Sheet with solve tracking and multi-language solutions
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-cyan-400" />
-                Timed practice tests with anti-cheat backend evaluation
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-cyan-400" />
-                Deep-dive exam patterns and syllabi for Google, Amazon, TCS & more
-              </li>
-            </ul>
-            <Link
-              href="/prep"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
-            >
-              Launch Prep Hub <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Jobs Preview */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      {/* Featured jobs */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h2 className="font-heading font-extrabold text-3xl text-white">
+            <h2 className="font-heading text-3xl font-extrabold text-white">
               Featured Opportunities
             </h2>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="mt-1 text-sm text-slate-400">
               Actively hiring roles from top product and high-growth companies.
             </p>
           </div>
           <Link
             href="/jobs"
-            className="text-sm font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
           >
-            View All Jobs <ArrowRight className="w-4 h-4" />
+            View All Jobs <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {FEATURED_JOBS.map((job) => (
             <JobCard key={job.id} job={job} />
           ))}
         </div>
       </section>
 
-      {/* Preparation Tracks Preview */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="font-heading font-extrabold text-3xl text-white">
+      {/* Prep tracks */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <h2 className="font-heading text-3xl font-extrabold text-white">
             Placement Preparation Curriculum
           </h2>
-          <p className="text-sm text-gray-400 mt-2">
-            Structured modules designed by engineers to take you from foundational aptitude to senior-level coding interviews.
+          <p className="mt-2 text-sm text-slate-400">
+            Structured modules designed by engineers to take you from foundational aptitude to
+            senior-level coding interviews.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Link
-            href="/prep/aptitude"
-            className="glass-panel p-6 rounded-2xl hover:border-indigo-500/40 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Compass className="w-5 h-5" />
-            </div>
-            <h3 className="font-heading font-bold text-white text-lg">Quantitative & Logical</h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Speed, Distance, Time, LCM unit method, P&C, probability, and shortcuts.
-            </p>
-          </Link>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {PREP_TRACKS.map((track) => {
+            const Icon = track.icon;
+            return (
+              <Link
+                key={track.href}
+                href={track.href}
+                className="glass-panel group rounded-2xl p-6 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-500/40"
+              >
+                <div
+                  className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl border transition-transform duration-200 group-hover:scale-110 ${track.tone}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-heading text-lg font-bold text-white">{track.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-slate-400">{track.desc}</p>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
 
-          <Link
-            href="/prep/dsa"
-            className="glass-panel p-6 rounded-2xl hover:border-indigo-500/40 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Code2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-heading font-bold text-white text-lg">Topic-Wise DSA Sheet</h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              15+ topics: Arrays, Two Pointers, Trees, Graphs, DP with code & complexities.
+      {/* Final CTA */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="glass-panel relative overflow-hidden rounded-3xl p-8 text-center sm:p-14">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-0 h-64 w-[600px] max-w-full -translate-x-1/2 rounded-full bg-indigo-600/20 blur-[100px]"
+          />
+          <div className="relative">
+            <h2 className="font-heading text-3xl font-extrabold text-white sm:text-4xl">
+              Ready to accelerate your engineering career?
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-400">
+              Join the platform that combines verified job opportunities with a complete placement
+              preparation curriculum.
             </p>
-          </Link>
-
-          <Link
-            href="/prep/technical"
-            className="glass-panel p-6 rounded-2xl hover:border-indigo-500/40 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <BookOpen className="w-5 h-5" />
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link href="/jobs" className={buttonClasses('primary', 'lg', 'px-8')}>
+                <Briefcase className="h-5 w-5" /> Get Started Free
+              </Link>
+              <Link href="/prep/dsa" className={buttonClasses('outline', 'lg', 'px-8')}>
+                <Code2 className="h-5 w-5" /> Explore DSA Sheet
+              </Link>
             </div>
-            <h3 className="font-heading font-bold text-white text-lg">Core CS Subjects</h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Operating Systems (Deadlocks, TLB), DBMS (ACID, B+ Trees), Networks, and OOP.
-            </p>
-          </Link>
-
-          <Link
-            href="/prep/companies"
-            className="glass-panel p-6 rounded-2xl hover:border-indigo-500/40 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <h3 className="font-heading font-bold text-white text-lg">Company Hiring Guides</h3>
-            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-              Google, Amazon, Microsoft, TCS, Infosys selection rounds and exam patterns.
-            </p>
-          </Link>
+          </div>
         </div>
       </section>
     </div>
