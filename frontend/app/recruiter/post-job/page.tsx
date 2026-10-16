@@ -1,13 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, AlertCircle, CheckCircle2, Lightbulb, Sparkles } from 'lucide-react';
-import { jobsApi } from '@/lib/api';
+import {
+  ArrowLeft,
+  AlertCircle,
+  CheckCircle2,
+  Lightbulb,
+  Sparkles,
+  Building2,
+  Loader2,
+} from 'lucide-react';
+import { jobsApi, recruiterApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
 import Button from '@/components/ui/Button';
 import { Field, Input, Textarea, Select } from '@/components/ui/Field';
+
+interface CompanyRef {
+  id: string;
+  name: string;
+}
 
 export default function PostJobPage() {
   const router = useRouter();
@@ -15,7 +28,7 @@ export default function PostJobPage() {
 
   const [formData, setFormData] = useState({
     title: '',
-    companyId: 'comp-google', // defaults to seeded company
+    companyId: '',
     description: '',
     location: '',
     jobType: 'FULL_TIME',
@@ -29,6 +42,68 @@ export default function PostJobPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // A recruiter owns a single company, so we resolve it from their own
+  // postings instead of assuming a company id. Until one is known the listing
+  // cannot be attributed, so the recruiter can set the profile up inline.
+  const [company, setCompany] = useState<CompanyRef | null>(null);
+  const [resolvingCompany, setResolvingCompany] = useState(true);
+  const [companyDraft, setCompanyDraft] = useState({ name: '', website: '', description: '' });
+  const [savingCompany, setSavingCompany] = useState(false);
+  const [companyError, setCompanyError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await recruiterApi.getMyJobs(token);
+        const jobs = res.data ?? [];
+        const owned = jobs.find((job: { company?: CompanyRef }) => job.company)?.company;
+        if (!cancelled && owned) {
+          setCompany({ id: owned.id, name: owned.name });
+          setFormData((f) => ({ ...f, companyId: owned.id }));
+        }
+      } catch {
+        // Ignored: the company panel falls back to profile creation below.
+      } finally {
+        if (!cancelled) setResolvingCompany(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [getToken]);
+
+  const saveCompanyProfile = async () => {
+    try {
+      setSavingCompany(true);
+      setCompanyError(null);
+      const token = await getToken();
+      if (!token) throw new Error('You must be signed in as a recruiter.');
+
+      const website = companyDraft.website.trim();
+      const description = companyDraft.description.trim();
+
+      const res = await recruiterApi.updateCompany(
+        {
+          name: companyDraft.name.trim(),
+          ...(website ? { website } : {}),
+          ...(description ? { description } : {}),
+        },
+        token
+      );
+
+      const saved = res.data as CompanyRef;
+      setCompany({ id: saved.id, name: saved.name });
+      setFormData((f) => ({ ...f, companyId: saved.id }));
+    } catch (err) {
+      setCompanyError((err as Error).message || 'Failed to save company profile.');
+    } finally {
+      setSavingCompany(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -36,6 +111,7 @@ export default function PostJobPage() {
       setError(null);
       const token = await getToken();
       if (!token) throw new Error('You must be signed in as a recruiter to post jobs.');
+      if (!formData.companyId) throw new Error('Set up your company profile before posting.');
 
       const payload = {
         title: formData.title,
@@ -111,6 +187,95 @@ export default function PostJobPage() {
               Job posted successfully! Redirecting to dashboard...
             </div>
           )}
+
+          {/* Company attribution */}
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <Building2 className="h-4 w-4 text-indigo-400" /> Company
+            </div>
+
+            {resolvingCompany ? (
+              <p className="mt-3 flex items-center gap-2 text-xs text-slate-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Resolving your company profile...
+              </p>
+            ) : company ? (
+              <p className="mt-3 flex items-center gap-2 text-sm text-slate-300">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                Posting as <span className="font-semibold text-white">{company.name}</span>
+              </p>
+            ) : (
+              <div className="mt-3 space-y-4">
+                <p className="text-xs text-slate-400">
+                  We could not find a company on your recruiter profile. Create one to attribute
+                  your listings.
+                </p>
+
+                {companyError && (
+                  <div
+                    role="alert"
+                    className="flex items-center gap-2 rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-xs text-rose-300"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    {companyError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Company name" htmlFor="company-name" required>
+                    <Input
+                      id="company-name"
+                      type="text"
+                      required
+                      placeholder="e.g. Acme Corp"
+                      value={companyDraft.name}
+                      onChange={(e) =>
+                        setCompanyDraft({ ...companyDraft, name: e.target.value })
+                      }
+                    />
+                  </Field>
+
+                  <Field label="Website" htmlFor="company-website" hint="Optional">
+                    <Input
+                      id="company-website"
+                      type="url"
+                      placeholder="https://acme.com"
+                      value={companyDraft.website}
+                      onChange={(e) =>
+                        setCompanyDraft({ ...companyDraft, website: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+
+                <Field
+                  label="About the company"
+                  htmlFor="company-description"
+                  hint="Optional, minimum 10 characters"
+                >
+                  <Textarea
+                    id="company-description"
+                    rows={2}
+                    placeholder="What does your company build?"
+                    value={companyDraft.description}
+                    onChange={(e) =>
+                      setCompanyDraft({ ...companyDraft, description: e.target.value })
+                    }
+                  />
+                </Field>
+
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={saveCompanyProfile}
+                  disabled={savingCompany || companyDraft.name.trim().length < 2}
+                >
+                  {savingCompany ? 'Saving...' : 'Save company profile'}
+                </Button>
+              </div>
+            )}
+          </div>
 
           <Field label="Job Title" htmlFor="job-title" required>
             <Input
@@ -232,7 +397,11 @@ export default function PostJobPage() {
             >
               Cancel
             </Link>
-            <Button type="submit" size="lg" disabled={submitting}>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={submitting || resolvingCompany || !formData.companyId}
+            >
               {submitting ? 'Publishing...' : 'Publish Job Listing'}
             </Button>
           </div>

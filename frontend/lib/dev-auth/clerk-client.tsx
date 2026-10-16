@@ -50,6 +50,20 @@ export const DEV_PERSONAS: DevPersona[] = [
     email: 'recruiter@google.com',
   },
   {
+    clerkId: 'user_recruiter_mock_457',
+    role: 'RECRUITER',
+    firstName: 'David',
+    fullName: 'David Chen',
+    email: 'recruiter@amazon.com',
+  },
+  {
+    clerkId: 'user_recruiter_mock_458',
+    role: 'RECRUITER',
+    firstName: 'Priya',
+    fullName: 'Priya Nair',
+    email: 'recruiter@microsoft.com',
+  },
+  {
     clerkId: 'user_admin_mock_123',
     role: 'ADMIN',
     firstName: 'System',
