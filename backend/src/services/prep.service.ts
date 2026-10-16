@@ -91,6 +91,62 @@ export class PrepService {
   }
 
   /**
+   * Aggregate DSA sheet progress: totals and solved counts per section and per
+   * difficulty. Kept out of the cached topic list so it stays per-user.
+   */
+  static async getDsaOverview(userId?: string) {
+    const topics = await prisma.topic.findMany({
+      where: { category: TopicCategory.DSA },
+      orderBy: { createdAt: 'asc' }, // preserves curriculum order
+      include: {
+        questions: {
+          select: {
+            difficulty: true,
+            userProgress: userId
+              ? { where: { userId }, select: { status: true } }
+              : false,
+          },
+        },
+      },
+    });
+
+    const pair = () => ({ total: 0, solved: 0 });
+    const stat = () => ({ total: 0, solved: 0, easy: pair(), medium: pair(), hard: pair() });
+    type Stat = ReturnType<typeof stat>;
+    type Pair = ReturnType<typeof pair>;
+
+    const totals: Stat = stat();
+
+    const sections = topics.map((topic) => {
+      const section: Stat & { id: string; name: string } = { id: topic.id, name: topic.name, ...stat() };
+
+      for (const q of topic.questions) {
+        const solved = Array.isArray(q.userProgress) && q.userProgress.some((p) => p.status === 'SOLVED');
+        const inc = solved ? 1 : 0;
+
+        section.total += 1;
+        section.solved += inc;
+        totals.total += 1;
+        totals.solved += inc;
+
+        const key = q.difficulty.toLowerCase();
+        if (key === 'easy' || key === 'medium' || key === 'hard') {
+          const bucket: Pair = section[key];
+          const totalBucket: Pair = totals[key];
+          bucket.total += 1;
+          bucket.solved += inc;
+          totalBucket.total += 1;
+          totalBucket.solved += inc;
+        }
+      }
+
+      return section;
+    });
+
+    return { totals, sections };
+  }
+
+  /**
    * Get single question detail
    */
   static async getQuestionById(id: string, userId?: string) {

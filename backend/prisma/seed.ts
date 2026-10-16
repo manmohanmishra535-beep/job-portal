@@ -1,4 +1,5 @@
 import { PrismaClient, Role, TopicCategory, QuestionType, ApplicationStatus } from '@prisma/client';
+import { DSA_SHEET } from './data/dsa-sheet';
 
 const prisma = new PrismaClient();
 
@@ -178,16 +179,6 @@ async function main() {
     },
   });
 
-  const dsaTopicArrays = await prisma.topic.upsert({
-    where: { id: 'topic-dsa-arrays' },
-    update: {},
-    create: {
-      id: 'topic-dsa-arrays',
-      name: 'Arrays & Two Pointers',
-      category: TopicCategory.DSA,
-    },
-  });
-
   const techTopicOS = await prisma.topic.upsert({
     where: { id: 'topic-tech-os' },
     update: {},
@@ -270,22 +261,6 @@ async function main() {
     },
   });
 
-  const q2 = await prisma.question.upsert({
-    where: { id: 'q-dsa-1' },
-    update: {},
-    create: {
-      id: 'q-dsa-1',
-      topicId: dsaTopicArrays.id,
-      title: 'Two Sum Problem',
-      body: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input has exactly one solution.',
-      type: QuestionType.CODING,
-      difficulty: 'Easy',
-      answer: 'Use a Hash Map to store complement (target - num). Time: O(N), Space: O(N).',
-      explanation: 'Iterate through the array. For each element num, check if (target - num) exists in the map. If yes, return indices. Otherwise store num with index.',
-      links: ['https://leetcode.com/problems/two-sum/'],
-    },
-  });
-
   const q3 = await prisma.question.upsert({
     where: { id: 'q-tech-1' },
     update: {},
@@ -303,6 +278,134 @@ async function main() {
   });
 
   console.log('✅ Seeded questions');
+
+  // 6b. Seed the full DSA sheet (sections -> topics, problems -> questions)
+  // Rich body/solution content is kept for the hand-authored problems; the
+  // remaining problems carry their title, difficulty and primary pattern.
+  const dsaSolutions: Record<
+    number,
+    { body: string; answer: string; explanation: string; links: string[] }
+  > = {
+    121: {
+      body: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume each input has exactly one solution.',
+      answer: `def twoSum(nums: list[int], target: int) -> list[int]:
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []`,
+      explanation:
+        'Utilize a hash map to look up the complement in O(1) time complexity. Single pass yields O(N) time and O(N) space.',
+      links: ['https://leetcode.com/problems/two-sum/'],
+    },
+    127: {
+      body: 'Given an integer array nums, return all triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.',
+      answer: `def threeSum(nums: list[int]) -> list[list[int]]:
+    nums.sort()
+    res = []
+    for i in range(len(nums) - 2):
+        if i > 0 and nums[i] == nums[i-1]:
+            continue
+        l, r = i + 1, len(nums) - 1
+        while l < r:
+            s = nums[i] + nums[l] + nums[r]
+            if s < 0: l += 1
+            elif s > 0: r -= 1
+            else:
+                res.append([nums[i], nums[l], nums[r]])
+                while l < r and nums[l] == nums[l+1]: l += 1
+                while l < r and nums[r] == nums[r-1]: r -= 1
+                l += 1; r -= 1
+    return res`,
+      explanation:
+        'Sort the array first. Fix one element and run two pointers (left and right) on the remaining array. Skip adjacent duplicate elements to avoid redundant triplets.',
+      links: ['https://leetcode.com/problems/3sum/'],
+    },
+    128: {
+      body: 'You are given an array prices where prices[i] is the price of a given stock on the ith day. Maximize profit by choosing a single day to buy and a single day to sell in the future.',
+      answer: `def maxProfit(prices: list[int]) -> int:
+    min_price = float('inf')
+    max_profit = 0
+    for price in prices:
+        if price < min_price:
+            min_price = price
+        elif price - min_price > max_profit:
+            max_profit = price - min_price
+    return max_profit`,
+      explanation:
+        'Track the running minimum price and calculate potential profit on each subsequent day. Time: O(N), Space: O(1).',
+      links: ['https://leetcode.com/problems/best-time-to-buy-and-sell-stock/'],
+    },
+    328: {
+      body: 'You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?',
+      answer: `def climbStairs(n: int) -> int:
+    if n <= 2: return n
+    first, second = 1, 2
+    for _ in range(3, n + 1):
+        first, second = second, first + second
+    return second`,
+      explanation:
+        'Classic Fibonacci recurrence: ways(n) = ways(n-1) + ways(n-2). Space can be optimized to O(1) by maintaining two state variables.',
+      links: ['https://leetcode.com/problems/climbing-stairs/'],
+    },
+    338: {
+      body: 'Given integer array coins and target amount, return fewest number of coins that make up that amount. If impossible, return -1.',
+      answer: `def coinChange(coins: list[int], amount: int) -> int:
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] = min(dp[i], dp[i - coin] + 1)
+    return dp[amount] if dp[amount] != float('inf') else -1`,
+      explanation:
+        'Unbounded knapsack style 1D DP table where dp[i] represents minimum coins required for sum i. Time: O(amount * len(coins)).',
+      links: ['https://leetcode.com/problems/coin-change/'],
+    },
+  };
+
+  for (const section of DSA_SHEET) {
+    const topicId = `topic-dsa-${section.key}`;
+    await prisma.topic.upsert({
+      where: { id: topicId },
+      update: { name: section.name },
+      create: { id: topicId, name: section.name, category: TopicCategory.DSA },
+    });
+
+    if (section.concepts.length > 0) {
+      const content = section.concepts.map((c) => `- ${c}`).join('\n');
+      await prisma.note.upsert({
+        where: { id: `note-dsa-${section.key}` },
+        update: { title: 'Concepts Covered', content },
+        create: { id: `note-dsa-${section.key}`, topicId, title: 'Concepts Covered', content },
+      });
+    }
+  }
+
+  const dsaQuestions = DSA_SHEET.flatMap((section) =>
+    section.problems.map((p) => {
+      const detailed = dsaSolutions[p.n];
+      return {
+        id: `q-dsa-${p.n}`,
+        topicId: `topic-dsa-${section.key}`,
+        title: p.title,
+        body: detailed?.body ?? `Practice problem: ${p.title}. Primary pattern: ${p.pattern}.`,
+        type: QuestionType.CODING,
+        difficulty: p.difficulty,
+        pattern: p.pattern,
+        answer: detailed?.answer ?? '',
+        explanation: detailed?.explanation ?? null,
+        links: detailed?.links ?? [],
+      };
+    })
+  );
+
+  await prisma.question.createMany({ data: dsaQuestions, skipDuplicates: true });
+
+  console.log(
+    `✅ Seeded DSA sheet: ${DSA_SHEET.length} topics, ${dsaQuestions.length} problems`
+  );
 
   // 7. Seed Quiz
   const sampleQuiz = await prisma.quiz.upsert({

@@ -85,6 +85,7 @@ export const prepApi = {
     const query = new URLSearchParams(filters).toString();
     return fetchApi<{ questions: any[]; pagination: any }>(`/topics/${topicId}/questions?${query}`, {}, token);
   },
+  getDsaOverview: (token?: string | null) => fetchApi<any>('/dsa/overview', {}, token),
   getQuestionById: (id: string, token?: string | null) => fetchApi<any>(`/questions/${id}`, {}, token),
   getTopicNotes: (topicId: string, token?: string | null) => fetchApi<any[]>(`/topics/${topicId}/notes`, {}, token),
   getCompanies: (token?: string | null) => fetchApi<any[]>('/companies', {}, token),

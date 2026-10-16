@@ -90,6 +90,7 @@ export interface Question {
   body: string;
   type: QuestionType;
   difficulty: 'Easy' | 'Medium' | 'Hard';
+  pattern?: string | null;
   options?: string[];
   answer?: string;
   explanation?: string | null;

@@ -8,6 +8,9 @@ const router = Router();
 // GET /topics?category=DSA - Topics by category (cached)
 router.get('/topics', optionalAuth, PrepController.getTopics);
 
+// GET /dsa/overview - Aggregated DSA progress (per section + difficulty)
+router.get('/dsa/overview', optionalAuth, PrepController.getDsaOverview);
+
 // GET /topics/:id/questions - Questions of a topic (filters: difficulty, status)
 router.get('/topics/:id/questions', optionalAuth, PrepController.getTopicQuestions);
 

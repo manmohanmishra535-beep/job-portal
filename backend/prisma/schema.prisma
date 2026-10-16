@@ -178,6 +178,7 @@ model Question {
   body         String
   type         QuestionType
   difficulty   String               // Easy, Medium, Hard
+  pattern      String?              // Primary problem-solving pattern (e.g. Sliding Window, Two Pointer)
   options      String[]             @default([]) // for MCQ
   answer       String               // Solution or correct option
   explanation  String?

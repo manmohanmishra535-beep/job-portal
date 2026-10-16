@@ -28,6 +28,7 @@ Three roles: **User (candidate)**, **Recruiter**, and **Admin**.
 │   ├── prisma/
 │   │   ├── schema.prisma    # Data model
 │   │   ├── migrations/      # SQL migrations
+│   │   ├── data/            # DSA syllabus source (dsa-sheet.ts)
 │   │   └── seed.ts          # Starter data
 │   └── src/
 │       ├── routes/          # URL definitions
@@ -46,6 +47,22 @@ Three roles: **User (candidate)**, **Recruiter**, and **Admin**.
 │   └── middleware.ts        # Clerk route protection
 └── postman/                 # API test collection
 ```
+
+## DSA Sheet data
+
+The DSA topic sheet is data-driven, not hard-coded. The syllabus lives in
+`backend/prisma/data/dsa-sheet.ts` — 31 sections and 354 problems, each with a difficulty and a
+primary pattern. `prisma/seed.ts` turns each section into a `Topic` (category `DSA`) and each
+problem into a `Question` (type `CODING`, `pattern` column), and stores each section's
+"Concepts Covered" as a `Note`. Because the problems are real rows, solve-tracking
+(`UserProgress`) and bookmarks work across the whole sheet.
+
+`frontend/app/prep/dsa/page.tsx` loads sections from `GET /topics?category=DSA` and problems
+from `GET /topics/:id/questions`, so syllabus edits flow through after `npm run prisma:seed`
+with no frontend changes.
+
+> Note: the local development Postgres created its connection with a `WIN1252` client encoding,
+> so the syllabus text is kept ASCII-only (e.g. `->` instead of `→`) to avoid insert failures.
 
 ## Prerequisites
 

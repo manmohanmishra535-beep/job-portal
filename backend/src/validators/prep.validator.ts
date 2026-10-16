@@ -13,6 +13,7 @@ export const createQuestionSchema = z.object({
   body: z.string().min(10),
   type: z.nativeEnum(QuestionType),
   difficulty: z.enum(['Easy', 'Medium', 'Hard']),
+  pattern: z.string().optional(),
   options: z.array(z.string()).default([]),
   answer: z.string().min(1),
   explanation: z.string().optional(),

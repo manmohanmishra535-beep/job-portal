@@ -1,24 +1,63 @@
 'use client';
 
-import { useState } from 'react';
-import { CheckCircle2, Circle, ExternalLink, Bookmark, ChevronDown, ChevronUp, Code, Lightbulb, Clock } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import {
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+  Bookmark,
+  ChevronDown,
+  ChevronUp,
+  Code,
+  Lightbulb,
+  SearchX,
+} from 'lucide-react';
 import { Question } from '@/types';
 import { progressApi, prepApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
 
+export type DsaDifficultyFilter = 'ALL' | 'Easy' | 'Medium' | 'Hard';
+
 interface DsaTopicSheetProps {
-  topicName: string;
   questions: Question[];
+  searchQuery?: string;
+  difficultyFilter?: DsaDifficultyFilter;
+  onSolvedChange?: (question: Question, nextStatus: 'SOLVED' | 'NOT_STARTED') => void;
 }
 
-export default function DsaTopicSheet({ topicName, questions: initialQuestions }: DsaTopicSheetProps) {
+const DIFFICULTY_STYLES: Record<string, string> = {
+  Easy: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  Medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  Hard: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
+};
+
+export default function DsaTopicSheet({
+  questions: initialQuestions,
+  searchQuery = '',
+  difficultyFilter = 'ALL',
+  onSolvedChange,
+}: DsaTopicSheetProps) {
   const { getToken, isSignedIn } = useAuth();
   const [questions, setQuestions] = useState(initialQuestions);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [activeCodeTab, setActiveCodeTab] = useState<Record<string, string>>({});
 
-  const solvedCount = questions.filter((q) => q.progressStatus === 'SOLVED').length;
-  const progressPct = questions.length > 0 ? Math.round((solvedCount / questions.length) * 100) : 0;
+  // Stable curriculum numbering, unaffected by filtering.
+  const positionById = useMemo(() => {
+    const map = new Map<string, number>();
+    questions.forEach((q, i) => map.set(q.id, i + 1));
+    return map;
+  }, [questions]);
+
+  const query = searchQuery.trim().toLowerCase();
+  const visible = questions.filter((q) => {
+    const matchesDifficulty = difficultyFilter === 'ALL' || q.difficulty === difficultyFilter;
+    const matchesQuery =
+      !query ||
+      q.title.toLowerCase().includes(query) ||
+      (q.pattern || '').toLowerCase().includes(query);
+    return matchesDifficulty && matchesQuery;
+  });
 
   const handleToggleSolve = async (questionId: string) => {
     if (!isSignedIn) {
@@ -26,13 +65,14 @@ export default function DsaTopicSheet({ topicName, questions: initialQuestions }
       return;
     }
 
-    const current = questions.find((q) => q.id === questionId)?.progressStatus;
-    const nextStatus = current === 'SOLVED' ? 'NOT_STARTED' : 'SOLVED';
+    const current = questions.find((q) => q.id === questionId);
+    const nextStatus = current?.progressStatus === 'SOLVED' ? 'NOT_STARTED' : 'SOLVED';
 
     // Optimistic UI update
     setQuestions((prev) =>
       prev.map((q) => (q.id === questionId ? { ...q, progressStatus: nextStatus } : q))
     );
+    if (current) onSolvedChange?.(current, nextStatus);
 
     try {
       const token = await getToken();
@@ -41,6 +81,13 @@ export default function DsaTopicSheet({ topicName, questions: initialQuestions }
       }
     } catch (err) {
       console.error('Failed to update progress status:', err);
+      // Roll back the optimistic change on failure.
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === questionId ? { ...q, progressStatus: current?.progressStatus } : q
+        )
+      );
+      if (current) onSolvedChange?.(current, current.progressStatus === 'SOLVED' ? 'SOLVED' : 'NOT_STARTED');
     }
   };
 
@@ -66,170 +113,170 @@ export default function DsaTopicSheet({ topicName, questions: initialQuestions }
     }
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Topic Header & Progress Ring Banner */}
-      <div className="glass-panel rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-heading font-extrabold text-2xl text-white">{topicName}</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Master the core algorithmic patterns and solve high-frequency interview problems.
-          </p>
-        </div>
-
-        {/* Progress Bar & Counter */}
-        <div className="flex items-center gap-4 bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
-          <div className="text-right">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">
-              Completed
-            </span>
-            <span className="font-heading font-bold text-lg text-white">
-              {solvedCount} / {questions.length}
-            </span>
-          </div>
-          <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 flex items-center justify-center font-bold text-xs text-indigo-400 font-mono">
-            {progressPct}%
-          </div>
-        </div>
+  if (visible.length === 0) {
+    return (
+      <div className="glass-panel rounded-2xl p-12 flex flex-col items-center justify-center text-center gap-2">
+        <SearchX className="w-8 h-8 text-gray-500" />
+        <p className="text-sm font-semibold text-gray-300">No problems match your filters</p>
+        <p className="text-xs text-gray-500">
+          {questions.length === 0
+            ? 'This section is concept-only — no practice problems yet.'
+            : 'Try clearing the search box or switching difficulty.'}
+        </p>
       </div>
+    );
+  }
 
-      {/* Questions Sheet Table */}
-      <div className="glass-panel rounded-2xl overflow-hidden border border-white/10">
-        <div className="divide-y divide-white/5">
-          {questions.map((q, idx) => {
-            const isSolved = q.progressStatus === 'SOLVED';
-            const isExpanded = expandedId === q.id;
-            const currentTab = activeCodeTab[q.id] || 'python';
+  return (
+    <div className="glass-panel rounded-2xl overflow-hidden border border-white/10">
+      <div className="divide-y divide-white/5">
+        {visible.map((q) => {
+          const isSolved = q.progressStatus === 'SOLVED';
+          const isExpanded = expandedId === q.id;
+          const currentTab = activeCodeTab[q.id] || 'python';
+          const position = positionById.get(q.id) ?? 0;
 
-            return (
-              <div key={q.id} className="transition-colors hover:bg-white/[0.02]">
-                <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
-                  {/* Status Check & Title */}
-                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                    <button
-                      onClick={() => handleToggleSolve(q.id)}
-                      className="text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
-                    >
-                      {isSolved ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-500/20" />
-                      ) : (
-                        <Circle className="w-5 h-5" />
-                      )}
-                    </button>
+          return (
+            <div key={q.id} className="transition-colors hover:bg-white/[0.02]">
+              <div className="p-4 flex items-center gap-4">
+                {/* Status toggle */}
+                <button
+                  onClick={() => handleToggleSolve(q.id)}
+                  className="text-gray-400 hover:text-emerald-400 transition-colors shrink-0"
+                  aria-label={isSolved ? 'Mark as not started' : 'Mark as solved'}
+                >
+                  {isSolved ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-emerald-500/20" />
+                  ) : (
+                    <Circle className="w-5 h-5" />
+                  )}
+                </button>
 
-                    <span className="text-xs font-mono text-gray-400 w-6">#{idx + 1}</span>
+                {/* Number + title */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-xs font-mono text-gray-500 w-7 shrink-0">#{position}</span>
+                  <span
+                    className={`text-sm font-semibold truncate ${
+                      isSolved ? 'line-through text-gray-500' : 'text-white'
+                    }`}
+                    title={q.title}
+                  >
+                    {q.title}
+                  </span>
+                </div>
 
-                    <span
-                      className={`text-sm font-semibold truncate ${
-                        isSolved ? 'line-through text-gray-400' : 'text-white'
-                      }`}
-                    >
-                      {q.title}
+                {/* Actions & badges */}
+                <div className="flex items-center gap-2 shrink-0">
+                  {q.pattern && (
+                    <span className="hidden lg:inline text-[11px] font-medium px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-gray-400 max-w-[180px] truncate">
+                      {q.pattern}
                     </span>
-                  </div>
+                  )}
 
-                  {/* Actions & Badges */}
-                  <div className="flex items-center gap-3 shrink-0">
-                    {/* Difficulty Badge */}
+                  <span
+                    className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider border ${
+                      DIFFICULTY_STYLES[q.difficulty] || DIFFICULTY_STYLES.Easy
+                    }`}
+                  >
+                    {q.difficulty}
+                  </span>
+
+                  {q.links && q.links.length > 0 && (
+                    <a
+                      href={q.links[0]}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                      title="Practice on LeetCode/GFG"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  <button
+                    onClick={() => handleToggleBookmark(q.id)}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      q.isBookmarked
+                        ? 'text-indigo-400 bg-indigo-500/10'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                    aria-label={q.isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
+                  >
+                    <Bookmark className={`w-4 h-4 ${q.isBookmarked ? 'fill-indigo-400' : ''}`} />
+                  </button>
+
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : q.id)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                    aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                  >
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Expanded solution drawer */}
+              {isExpanded && (
+                <div className="px-5 pb-6 pt-2 bg-[#0d1322]/90 border-t border-white/5 space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {q.pattern && (
+                      <span className="inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300">
+                        Pattern: {q.pattern}
+                      </span>
+                    )}
                     <span
-                      className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                        q.difficulty === 'Easy'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : q.difficulty === 'Medium'
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      className={`inline-flex items-center text-[11px] font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border ${
+                        DIFFICULTY_STYLES[q.difficulty] || DIFFICULTY_STYLES.Easy
                       }`}
                     >
                       {q.difficulty}
                     </span>
+                  </div>
 
-                    {/* External Link */}
-                    {q.links && q.links.length > 0 && (
-                      <a
-                        href={q.links[0]}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                        title="Practice on LeetCode/GFG"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                    )}
+                  <p className="text-sm text-gray-300 leading-relaxed">{q.body}</p>
 
-                    {/* Bookmark Toggle */}
-                    <button
-                      onClick={() => handleToggleBookmark(q.id)}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        q.isBookmarked
-                          ? 'text-indigo-400 bg-indigo-500/10'
-                          : 'text-gray-400 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <Bookmark className={`w-4 h-4 ${q.isBookmarked ? 'fill-indigo-400' : ''}`} />
-                    </button>
+                  {q.explanation && (
+                    <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/15 space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-400">
+                        <Lightbulb className="w-4 h-4" />
+                        Intuition & Optimal Approach
+                      </div>
+                      <p className="text-xs text-gray-300 leading-relaxed font-sans">{q.explanation}</p>
+                    </div>
+                  )}
 
-                    {/* Expand Details Trigger */}
-                    <button
-                      onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                    >
-                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
+                  <div className="rounded-xl overflow-hidden border border-white/10 bg-[#070b12]">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
+                      <div className="flex items-center gap-2">
+                        <Code className="w-4 h-4 text-cyan-400" />
+                        <span className="text-xs font-semibold text-gray-300">Solution</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {['python', 'cpp', 'java', 'javascript'].map((lang) => (
+                          <button
+                            key={lang}
+                            onClick={() => setActiveCodeTab((prev) => ({ ...prev, [q.id]: lang }))}
+                            className={`px-2.5 py-1 text-[11px] font-mono rounded-md transition-colors ${
+                              currentTab === lang
+                                ? 'bg-indigo-600 text-white font-semibold'
+                                : 'text-gray-400 hover:text-white'
+                            }`}
+                          >
+                            {lang.toUpperCase()}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <pre className="p-4 text-xs font-mono text-cyan-200 overflow-x-auto leading-relaxed">
+                      {q.answer || '// Editorial for this problem is not included in the sheet yet.'}
+                    </pre>
                   </div>
                 </div>
-
-                {/* Expanded Solution Drawer */}
-                {isExpanded && (
-                  <div className="px-5 pb-6 pt-2 bg-[#0d1322]/90 border-t border-white/5 space-y-4">
-                    <p className="text-sm text-gray-300 leading-relaxed">{q.body}</p>
-
-                    {/* Intuition & Approach */}
-                    {q.explanation && (
-                      <div className="p-4 rounded-xl bg-indigo-500/5 border border-indigo-500/15 space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-400">
-                          <Lightbulb className="w-4 h-4" />
-                          Intuition & Optimal Approach
-                        </div>
-                        <p className="text-xs text-gray-300 leading-relaxed font-sans">{q.explanation}</p>
-                      </div>
-                    )}
-
-                    {/* Solution & Complexities */}
-                    <div className="rounded-xl overflow-hidden border border-white/10 bg-[#070b12]">
-                      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
-                        <div className="flex items-center gap-2">
-                          <Code className="w-4 h-4 text-cyan-400" />
-                          <span className="text-xs font-semibold text-gray-300">Solution</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {['python', 'cpp', 'java', 'javascript'].map((lang) => (
-                            <button
-                              key={lang}
-                              onClick={() =>
-                                setActiveCodeTab((prev) => ({ ...prev, [q.id]: lang }))
-                              }
-                              className={`px-2.5 py-1 text-[11px] font-mono rounded-md transition-colors ${
-                                currentTab === lang
-                                  ? 'bg-indigo-600 text-white font-semibold'
-                                  : 'text-gray-400 hover:text-white'
-                              }`}
-                            >
-                              {lang.toUpperCase()}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <pre className="p-4 text-xs font-mono text-cyan-200 overflow-x-auto leading-relaxed">
-                        {q.answer || '// Code solution available in repository starter files'}
-                      </pre>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

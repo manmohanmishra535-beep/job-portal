@@ -39,6 +39,20 @@ export class PrepController {
     }
   }
 
+  static async getDsaOverview(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.id;
+      const data = await PrepService.getDsaOverview(userId);
+      return res.status(200).json({
+        success: true,
+        data,
+        message: 'DSA overview fetched successfully',
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   static async getQuestionById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

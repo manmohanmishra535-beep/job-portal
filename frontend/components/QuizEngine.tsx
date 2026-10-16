@@ -25,22 +25,26 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
   const questions = quiz.questions || [];
   const currentQ = questions[currentIdx];
 
-  // Timer countdown
+  // Countdown ticker. Set up once per attempt (not on every tick) so the
+  // interval is stable, and contained entirely to a plain decrement.
   useEffect(() => {
-    if (result || timeLeft <= 0) return;
+    if (result) return;
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [result, timeLeft]);
+  }, [result]);
+
+  // Auto-submit when the clock runs out. Kept out of the state updater above so
+  // the updater stays pure (React may invoke it more than once in dev), and the
+  // synchronous `submittingRef` guard makes this safe if it runs twice.
+  useEffect(() => {
+    if (timeLeft === 0 && !result) {
+      handleSubmit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, result]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
