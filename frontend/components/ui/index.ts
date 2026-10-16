@@ -11,7 +11,7 @@ export {
   CardFooter,
 } from './Card';
 export type { CardProps } from './Card';
-export { default as Field, Input, Textarea, Select, inputClasses, textareaClasses, selectClasses } from './Field';
+export { Field, Input, Textarea, Select, inputClasses, textareaClasses, selectClasses } from './Field';
 export type { FieldProps } from './Field';
 export { default as Skeleton, SkeletonText, JobCardSkeleton, StatCardSkeleton } from './Skeleton';
 export { default as EmptyState } from './EmptyState';

@@ -1,107 +1,99 @@
 import Link from 'next/link';
-import { Sparkles, Github, Twitter, Linkedin, Heart } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-block text-slate-400 transition-colors duration-150 hover:text-indigo-300"
+    >
+      {children}
+    </Link>
+  );
+}
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#090d16] text-gray-400 text-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand Info */}
+    <footer className="mt-16 border-t border-white/10 bg-[#070a12]/80 text-sm text-slate-400 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
+          {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-400 flex items-center justify-center text-white">
-                <Sparkles className="w-4 h-4" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-cyan-400 text-white shadow-lg shadow-indigo-500/25">
+                <Sparkles className="h-4 w-4" />
               </div>
-              <span className="font-heading font-bold text-lg text-white">NexusCareer</span>
+              <span className="font-heading text-lg font-bold text-white">NexusCareer</span>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="max-w-xs text-sm leading-relaxed text-slate-400">
               The unified career acceleration platform combining verified tech job opportunities with
               production-grade placement prep modules.
             </p>
           </div>
 
-          {/* Job Portal Links */}
-          <div>
-            <h4 className="font-heading font-semibold text-white mb-3 text-sm">Job Portal</h4>
-            <ul className="space-y-2">
+          {/* Job Portal */}
+          <nav aria-label="Job portal">
+            <h4 className="mb-3 font-heading text-sm font-semibold text-white">Job Portal</h4>
+            <ul className="space-y-2.5">
               <li>
-                <Link href="/jobs" className="hover:text-indigo-400 transition-colors">
-                  Explore Tech Jobs
-                </Link>
+                <FooterLink href="/jobs">Explore Tech Jobs</FooterLink>
               </li>
               <li>
-                <Link href="/jobs?experienceLevel=Fresher" className="hover:text-indigo-400 transition-colors">
-                  Fresher & Graduate Roles
-                </Link>
+                <FooterLink href="/jobs?experienceLevel=Fresher">Fresher &amp; Graduate Roles</FooterLink>
               </li>
               <li>
-                <Link href="/jobs?jobType=REMOTE" className="hover:text-indigo-400 transition-colors">
-                  Remote Engineering
-                </Link>
+                <FooterLink href="/jobs?jobType=REMOTE">Remote Engineering</FooterLink>
               </li>
               <li>
-                <Link href="/recruiter" className="hover:text-indigo-400 transition-colors">
-                  Post a Job (Recruiters)
-                </Link>
+                <FooterLink href="/recruiter">Post a Job (Recruiters)</FooterLink>
               </li>
             </ul>
-          </div>
+          </nav>
 
-          {/* Preparation Hub Links */}
-          <div>
-            <h4 className="font-heading font-semibold text-white mb-3 text-sm">Preparation Hub</h4>
-            <ul className="space-y-2">
+          {/* Prep Hub */}
+          <nav aria-label="Preparation hub">
+            <h4 className="mb-3 font-heading text-sm font-semibold text-white">Preparation Hub</h4>
+            <ul className="space-y-2.5">
               <li>
-                <Link href="/prep/aptitude" className="hover:text-indigo-400 transition-colors">
-                  Quantitative Aptitude
-                </Link>
+                <FooterLink href="/prep/aptitude">Quantitative Aptitude</FooterLink>
               </li>
               <li>
-                <Link href="/prep/dsa" className="hover:text-indigo-400 transition-colors">
-                  Curated DSA Sheet
-                </Link>
+                <FooterLink href="/prep/dsa">Curated DSA Sheet</FooterLink>
               </li>
               <li>
-                <Link href="/prep/technical" className="hover:text-indigo-400 transition-colors">
-                  Core CS (OS, DBMS, Networks)
-                </Link>
+                <FooterLink href="/prep/technical">Core CS (OS, DBMS, Networks)</FooterLink>
               </li>
               <li>
-                <Link href="/prep/hr" className="hover:text-indigo-400 transition-colors">
-                  Behavioral & STAR Method
-                </Link>
+                <FooterLink href="/prep/hr">Behavioral &amp; STAR Method</FooterLink>
               </li>
               <li>
-                <Link href="/prep/companies" className="hover:text-indigo-400 transition-colors">
-                  Company Exam Patterns
-                </Link>
+                <FooterLink href="/prep/companies">Company Exam Patterns</FooterLink>
               </li>
             </ul>
-          </div>
+          </nav>
 
-          {/* Platform Status */}
+          {/* Architecture */}
           <div>
-            <h4 className="font-heading font-semibold text-white mb-3 text-sm">Architecture</h4>
-            <p className="text-xs text-gray-400 mb-4 leading-relaxed">
-              Next.js 14 App Router + Express.js REST API + Prisma ORM + Supabase PostgreSQL + Redis Cache + Clerk Auth.
+            <h4 className="mb-3 font-heading text-sm font-semibold text-white">Architecture</h4>
+            <p className="mb-4 text-xs leading-relaxed text-slate-500">
+              Next.js 14 App Router + Express.js REST API + Prisma ORM + Supabase PostgreSQL + Redis
+              Cache + Clerk Auth.
             </p>
-            <div className="flex items-center gap-3">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-              <span className="text-xs text-emerald-400 font-medium">All Systems Operational</span>
+              <span className="text-xs font-medium text-emerald-300">All Systems Operational</span>
             </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-gray-400">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 sm:flex-row">
+          <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} NexusCareer. Built for high-growth software engineers.
           </p>
-          <div className="flex items-center gap-4 text-xs text-gray-400">
-            <span>Powered by Next.js & Express</span>
-          </div>
+          <p className="text-xs text-slate-500">Powered by Next.js &amp; Express</p>
         </div>
       </div>
     </footer>

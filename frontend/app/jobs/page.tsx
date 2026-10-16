@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Briefcase, AlertCircle, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Briefcase, RefreshCw, SearchX, ArrowUpDown } from 'lucide-react';
 import JobCard from '@/components/JobCard';
 import JobFilters from '@/components/JobFilters';
 import ApplyModal from '@/components/ApplyModal';
+import EmptyState from '@/components/ui/EmptyState';
+import Button from '@/components/ui/Button';
 import { Job } from '@/types';
 import { jobsApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
@@ -72,10 +74,13 @@ const FALLBACK_JOBS: Job[] = [
   },
 ];
 
+type SortOption = 'recommended' | 'newest' | 'salary-desc' | 'salary-asc';
+
 export default function JobsPage() {
   const { getToken } = useAuth();
   const [jobs, setJobs] = useState<Job[]>(FALLBACK_JOBS);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('recommended');
   const [selectedJobForApply, setSelectedJobForApply] = useState<Job | null>(null);
 
   const [filters, setFilters] = useState({
@@ -160,65 +165,108 @@ export default function JobsPage() {
     });
   };
 
+  // Sorting is purely presentational; "recommended" preserves the fetched order.
+  const sortedJobs = useMemo(() => {
+    const list = [...jobs];
+    switch (sortBy) {
+      case 'newest':
+        return list.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      case 'salary-desc':
+        return list.sort(
+          (a, b) => (b.salaryMax ?? b.salaryMin ?? 0) - (a.salaryMax ?? a.salaryMin ?? 0)
+        );
+      case 'salary-asc':
+        return list.sort(
+          (a, b) => (a.salaryMin ?? a.salaryMax ?? 0) - (b.salaryMin ?? b.salaryMax ?? 0)
+        );
+      default:
+        return list;
+    }
+  }, [jobs, sortBy]);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      {/* Page Title Banner */}
-      <div className="mb-10">
-        <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider mb-2">
-          <Briefcase className="w-4 h-4" />
+    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* Header */}
+      <header className="mb-10">
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+          <Briefcase className="h-4 w-4" />
           Verified Tech Roles
         </div>
-        <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
+        <h1 className="font-heading text-3xl font-extrabold text-white sm:text-4xl">
           Explore Software Engineering Jobs
         </h1>
-        <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-          Browse vetted software engineering, cloud, frontend, and systems positions with verified compensation packages.
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          Browse vetted software engineering, cloud, frontend, and systems positions with verified
+          compensation packages.
         </p>
-      </div>
+      </header>
 
-      {/* Main Layout: Filters Sidebar + Jobs Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-        {/* Filters Sidebar */}
-        <div className="lg:col-span-1">
+      <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
+        {/* Filters */}
+        <aside className="lg:col-span-1 lg:sticky lg:top-24">
           <JobFilters
             filters={filters}
             onChange={handleFilterChange}
             onReset={handleResetFilters}
           />
-        </div>
+        </aside>
 
-        {/* Jobs Grid */}
-        <div className="lg:col-span-3 space-y-6">
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <span>
-              Showing <strong className="text-white">{jobs.length}</strong> active openings
-            </span>
-            {loading && (
-              <span className="flex items-center gap-1.5 text-indigo-400">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Updating...
-              </span>
-            )}
+        {/* Results */}
+        <section className="space-y-6 lg:col-span-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-400">
+              Showing <span className="font-semibold text-white">{jobs.length}</span> active
+              opening{jobs.length === 1 ? '' : 's'}
+            </p>
+
+            <div className="flex items-center gap-3">
+              {loading && (
+                <span className="flex items-center gap-1.5 text-xs text-indigo-300">
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  Updating
+                </span>
+              )}
+              <div className="relative">
+                <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  aria-label="Sort jobs"
+                  className="h-9 appearance-none rounded-xl border border-white/10 bg-white/5 pl-9 pr-8 text-sm text-slate-200 transition-colors focus:border-indigo-500/70 focus:outline-none focus:ring-2 focus:ring-indigo-500/25"
+                >
+                  <option className="bg-[#0b111e]" value="recommended">
+                    Recommended
+                  </option>
+                  <option className="bg-[#0b111e]" value="newest">
+                    Newest first
+                  </option>
+                  <option className="bg-[#0b111e]" value="salary-desc">
+                    Salary: high to low
+                  </option>
+                  <option className="bg-[#0b111e]" value="salary-asc">
+                    Salary: low to high
+                  </option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {jobs.length === 0 ? (
-            <div className="glass-panel rounded-3xl p-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-white/5 text-gray-400 flex items-center justify-center mx-auto">
-                <AlertCircle className="w-6 h-6" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-white">No Matching Jobs Found</h3>
-              <p className="text-xs text-gray-400 max-w-sm mx-auto">
-                Try widening your search terms or resetting the active filters.
-              </p>
-              <button
-                onClick={handleResetFilters}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white"
-              >
-                Reset Filters
-              </button>
-            </div>
+            <EmptyState
+              icon={SearchX}
+              title="No matching jobs found"
+              description="Try widening your search terms or resetting the active filters to see more openings."
+              action={
+                <Button variant="primary" onClick={handleResetFilters}>
+                  Reset filters
+                </Button>
+              }
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {jobs.map((job) => (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {sortedJobs.map((job) => (
                 <JobCard
                   key={job.id}
                   job={job}
@@ -227,7 +275,7 @@ export default function JobsPage() {
               ))}
             </div>
           )}
-        </div>
+        </section>
       </div>
 
       {/* Apply Modal */}
