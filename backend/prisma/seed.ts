@@ -29,6 +29,31 @@ async function main() {
     },
   });
 
+  // One recruiter per company. RecruiterService.createOrUpdateCompany treats a
+  // recruiter with more than one company as ambiguous and responds 409, so the
+  // seed must never attach two companies to the same recruiter.
+  const amazonRecruiterUser = await prisma.user.upsert({
+    where: { email: 'recruiter@amazon.com' },
+    update: {},
+    create: {
+      clerkId: 'user_recruiter_mock_457',
+      email: 'recruiter@amazon.com',
+      name: 'David Chen',
+      role: Role.RECRUITER,
+    },
+  });
+
+  const msftRecruiterUser = await prisma.user.upsert({
+    where: { email: 'recruiter@microsoft.com' },
+    update: {},
+    create: {
+      clerkId: 'user_recruiter_mock_458',
+      email: 'recruiter@microsoft.com',
+      name: 'Priya Nair',
+      role: Role.RECRUITER,
+    },
+  });
+
   const candidateUser = await prisma.user.upsert({
     where: { email: 'candidate@example.com' },
     update: {},
@@ -49,12 +74,12 @@ async function main() {
     },
   });
 
-  console.log('✅ Seeded users (Admin, Recruiter, Candidate)');
+  console.log('✅ Seeded users (Admin, 3 Recruiters, Candidate)');
 
   // 2. Seed Companies
   const googleCompany = await prisma.company.upsert({
     where: { id: 'comp-google' },
-    update: {},
+    update: { recruiterId: recruiterUser.id },
     create: {
       id: 'comp-google',
       name: 'Google',
@@ -68,28 +93,28 @@ async function main() {
 
   const amazonCompany = await prisma.company.upsert({
     where: { id: 'comp-amazon' },
-    update: {},
+    update: { recruiterId: amazonRecruiterUser.id },
     create: {
       id: 'comp-amazon',
       name: 'Amazon',
       logoUrl: 'https://images.unsplash.com/photo-1523474255658-4af61825044d?w=128&q=80',
       website: 'https://amazon.jobs',
       description: 'Earth’s most customer-centric company, provider of AWS cloud and global e-commerce.',
-      recruiterId: recruiterUser.id,
+      recruiterId: amazonRecruiterUser.id,
       isApproved: true,
     },
   });
 
   const msftCompany = await prisma.company.upsert({
     where: { id: 'comp-msft' },
-    update: {},
+    update: { recruiterId: msftRecruiterUser.id },
     create: {
       id: 'comp-msft',
       name: 'Microsoft',
       logoUrl: 'https://images.unsplash.com/photo-1583339824000-5af72d41a54b?w=128&q=80',
       website: 'https://careers.microsoft.com',
       description: 'Empowering every person and organization on the planet to achieve more.',
-      recruiterId: recruiterUser.id,
+      recruiterId: msftRecruiterUser.id,
       isApproved: true,
     },
   });
@@ -118,7 +143,7 @@ async function main() {
 
   const job2 = await prisma.job.upsert({
     where: { id: 'job-2' },
-    update: {},
+    update: { companyId: amazonCompany.id, postedById: amazonRecruiterUser.id },
     create: {
       id: 'job-2',
       title: 'SDE-1 (Frontend & Web Systems)',
@@ -131,13 +156,13 @@ async function main() {
       experienceLevel: 'Fresher',
       status: 'OPEN',
       companyId: amazonCompany.id,
-      postedById: recruiterUser.id,
+      postedById: amazonRecruiterUser.id,
     },
   });
 
   const job3 = await prisma.job.upsert({
     where: { id: 'job-3' },
-    update: {},
+    update: { companyId: msftCompany.id, postedById: msftRecruiterUser.id },
     create: {
       id: 'job-3',
       title: 'Cloud Solutions Engineer (Azure)',
@@ -150,7 +175,7 @@ async function main() {
       experienceLevel: 'Mid',
       status: 'OPEN',
       companyId: msftCompany.id,
-      postedById: recruiterUser.id,
+      postedById: msftRecruiterUser.id,
     },
   });
 
