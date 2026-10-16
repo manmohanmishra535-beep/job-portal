@@ -142,6 +142,14 @@ export async function optionalAuth(req: Request, res: Response, next: NextFuncti
         });
         if (user) req.user = user;
       }
+    } else {
+      // Development mock fallback, mirroring requireAuth: treat the bearer token
+      // as the clerkId so optional-auth reads behave like they do in production.
+      const user = await prisma.user.findUnique({
+        where: { clerkId: token },
+        select: { id: true, clerkId: true, email: true, name: true, role: true },
+      });
+      if (user) req.user = user;
     }
   } catch {
     // Silently continue for optional auth

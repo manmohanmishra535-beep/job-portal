@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MapPin, DollarSign, Clock, Bookmark, Building, CheckCircle2 } from 'lucide-react';
 import { Job } from '@/types';
@@ -17,6 +17,13 @@ export default function JobCard({ job, onApplyClick }: JobCardProps) {
   const { getToken, isSignedIn } = useAuth();
   const [isSaved, setIsSaved] = useState(job.isSaved || false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Re-sync when fresh job data arrives. The list first renders fallback jobs and
+  // is then replaced by the API response; those share ids, so React reuses this
+  // component and the initial `useState` value would otherwise stick.
+  useEffect(() => {
+    setIsSaved(job.isSaved || false);
+  }, [job.isSaved, job.id]);
 
   const handleToggleSave = async (e: React.MouseEvent) => {
     e.preventDefault();

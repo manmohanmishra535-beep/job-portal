@@ -4,7 +4,7 @@ import { JobService } from '../services/job.service';
 export class JobController {
   static async listJobs(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await JobService.listJobs(req.query as any);
+      const result = await JobService.listJobs(req.query as any, req.user?.id);
       return res.status(200).json({
         success: true,
         data: result,

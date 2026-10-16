@@ -19,37 +19,15 @@ import { formatDate } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
   const { getToken } = useAuth();
+  // Start empty so the UI never presents fabricated figures; values arrive from
+  // GET /admin/stats once it resolves.
   const [stats, setStats] = useState<any>({
-    users: { total: 1420, candidates: 1340, recruiters: 75 },
-    jobs: { total: 85, active: 62 },
-    applications: 530,
-    prep: { totalQuestions: 180, quizzesAttempted: 1120 },
+    users: { total: 0, candidates: 0, recruiters: 0 },
+    jobs: { total: 0, active: 0 },
+    applications: 0,
+    prep: { totalQuestions: 0, quizzesAttempted: 0 },
   });
-  const [usersList, setUsersList] = useState<any[]>([
-    {
-      id: 'u-1',
-      name: 'Sarah Connor',
-      email: 'recruiter@google.com',
-      role: 'RECRUITER',
-      createdAt: new Date().toISOString(),
-      companies: [{ name: 'Google', isApproved: true }],
-    },
-    {
-      id: 'u-2',
-      name: 'Alex Johnson',
-      email: 'candidate@example.com',
-      role: 'USER',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'u-3',
-      name: 'Michael Scott',
-      email: 'mscott@dundermifflin.com',
-      role: 'RECRUITER',
-      createdAt: new Date().toISOString(),
-      companies: [{ name: 'Dunder Mifflin Tech', isApproved: false }],
-    },
-  ]);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

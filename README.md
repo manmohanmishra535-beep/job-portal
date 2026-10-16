@@ -134,6 +134,56 @@ curl http://localhost:5000/api/v1/admin/stats \
 
 This fallback is for local development only — always set a real `CLERK_SECRET_KEY` in production.
 
+### Development Auth Shim (frontend, local only)
+
+The browser flow needs real Clerk keys, because Clerk's client script and
+dev-browser handshake are served from the publishable key's domain. To browse the UI
+locally without a Clerk account, the frontend ships an opt-in shim:
+
+- `frontend/lib/dev-auth/clerk-client.tsx` — replaces `@clerk/nextjs`
+- `frontend/lib/dev-auth/clerk-server.ts` — replaces `@clerk/nextjs/server`
+- `frontend/next.config.js` — aliases those packages to the shims when `AUTH_SHIM=true`
+
+The shim's `getToken()` returns a seeded `clerkId`, which the backend accepts via the
+development fallback above, so the UI exercises the real API and database. The
+signed-in persona can be switched at runtime from the avatar menu in the navbar
+(Candidate / Recruiter / Admin), matching the seeded users.
+
+Enable it in `frontend/.env.local`:
+
+```
+AUTH_SHIM=true
+NEXT_PUBLIC_AUTH_SHIM=true
+NEXT_PUBLIC_DEV_AUTH_DEFAULT=user_candidate_mock_789
+```
+
+> **Security:** the shim trusts the browser and bypasses authentication. It is gated
+> behind an explicit env flag and is intended for local development only. Remove
+> `AUTH_SHIM` (or set it to `false`) and configure real Clerk keys before deploying.
+
+### Known Behaviour: Demo Fallback Data
+
+`app/admin/page.tsx` starts from zeros and a loading state, so the governance dashboard
+never displays fabricated figures. `app/jobs/page.tsx` still uses `FALLBACK_JOBS` (three
+sample postings) for an instant landing preview; on API failure those samples remain on
+screen, so verify real data is loading if you see suspiciously round numbers.
+
+### `POST /recruiter/company` and Multiple Companies
+
+`RecruiterService.createOrUpdateCompany` resolves the recruiter's company
+deterministically (`orderBy: createdAt`):
+
+- **0 companies** → creates one (`isApproved: false`, pending admin review), responds `201`.
+- **1 company** → updates it, responds `200`.
+- **2+ companies** → responds `409` with the list of conflicting companies instead of
+  silently overwriting one.
+
+The `409` guard matters because the seed data assigns all three companies (Google,
+Amazon, Microsoft) to the single seeded recruiter, and a recruiter is meant to own one
+company. Rather than arbitrarily picking one and renaming it, the endpoint now refuses
+and names the conflict. To exercise the create/update path as intended, give each
+company its own recruiter in `prisma/seed.ts`.
+
 ## Available Scripts
 
 **Backend**

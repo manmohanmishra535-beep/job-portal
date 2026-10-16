@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Timer, CheckCircle, XCircle, Award, RotateCcw, AlertTriangle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { Quiz } from '@/types';
 import { quizApi } from '@/lib/api';
@@ -17,6 +17,10 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
   const [timeLeft, setTimeLeft] = useState(quiz.duration * 60);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<any | null>(null);
+  // Synchronous guard: the submit button's `disabled` state only takes effect
+  // after a re-render, so two clicks in the same tick (or a click racing the
+  // timer expiry) would otherwise create duplicate quiz attempts.
+  const submittingRef = useRef(false);
 
   const questions = quiz.questions || [];
   const currentQ = questions[currentIdx];
@@ -53,11 +57,14 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
   };
 
   const handleSubmit = async () => {
+    if (submittingRef.current || result) return;
+
     if (!isSignedIn) {
       alert('Please sign in to submit your quiz and track your placement score!');
       return;
     }
 
+    submittingRef.current = true;
     try {
       setIsSubmitting(true);
       const token = await getToken();
@@ -70,6 +77,7 @@ export default function QuizEngine({ quiz }: QuizEngineProps) {
       console.error('Quiz submission error:', err);
       alert('Error submitting quiz. Please try again.');
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };

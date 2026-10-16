@@ -8,7 +8,7 @@ export class JobService {
   /**
    * Search and filter jobs with Redis cache-aside
    */
-  static async listJobs(query: JobQueryInput) {
+  static async listJobs(query: JobQueryInput, userId?: string) {
     const { q, location, jobType, skills, salaryMin, experienceLevel, page, limit } = query;
     const skip = (page - 1) * limit;
 
@@ -20,7 +20,7 @@ export class JobService {
     // 1. Try cache
     const cachedData = await cache.get(cacheKey);
     if (cachedData) {
-      return cachedData;
+      return JobService.withUserFlags(cachedData, userId);
     }
 
     // 2. Build Prisma where clause
@@ -94,7 +94,36 @@ export class JobService {
     // 3. Cache for 5 minutes (300 seconds)
     await cache.set(cacheKey, result, 300);
 
-    return result;
+    return JobService.withUserFlags(result, userId);
+  }
+
+  /**
+   * Attach per-user `isSaved` / `hasApplied` flags to a job list.
+   *
+   * Deliberately applied *after* the shared cache lookup so the cached entry
+   * stays user-agnostic and can never leak one candidate's state to another.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static async withUserFlags(result: any, userId?: string) {
+    if (!userId || !result?.jobs?.length) return result;
+
+    const jobIds = result.jobs.map((job: { id: string }) => job.id);
+    const [saved, applied] = await Promise.all([
+      prisma.savedJob.findMany({ where: { userId, jobId: { in: jobIds } }, select: { jobId: true } }),
+      prisma.application.findMany({ where: { userId, jobId: { in: jobIds } }, select: { jobId: true } }),
+    ]);
+
+    const savedIds = new Set(saved.map((row) => row.jobId));
+    const appliedIds = new Set(applied.map((row) => row.jobId));
+
+    return {
+      ...result,
+      jobs: result.jobs.map((job: { id: string }) => ({
+        ...job,
+        isSaved: savedIds.has(job.id),
+        hasApplied: appliedIds.has(job.id),
+      })),
+    };
   }
 
   /**

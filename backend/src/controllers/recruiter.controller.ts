@@ -33,11 +33,11 @@ export class RecruiterController {
   static async createOrUpdateCompany(req: Request, res: Response, next: NextFunction) {
     try {
       const recruiterId = req.user!.id;
-      const company = await RecruiterService.createOrUpdateCompany(recruiterId, req.body);
-      return res.status(200).json({
+      const { company, created } = await RecruiterService.createOrUpdateCompany(recruiterId, req.body);
+      return res.status(created ? 201 : 200).json({
         success: true,
         data: company,
-        message: 'Company profile updated successfully',
+        message: created ? 'Company profile created successfully' : 'Company profile updated successfully',
       });
     } catch (error) {
       return next(error);
