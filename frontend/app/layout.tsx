@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="dark">
-        <body className="min-h-screen flex flex-col bg-[#090d16] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+        <body className="flex min-h-screen flex-col bg-[#070a12] text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

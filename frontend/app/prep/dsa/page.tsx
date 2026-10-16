@@ -2,11 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Code2, ArrowLeft, Loader2, AlertCircle, Search } from 'lucide-react';
+import { Code2, ArrowLeft, AlertCircle, Search } from 'lucide-react';
 import DsaTopicSheet, { DsaDifficultyFilter } from '@/components/DsaTopicSheet';
 import { Question } from '@/types';
 import { prepApi } from '@/lib/api';
 import { useAuth } from '@clerk/nextjs';
+import { cn } from '@/lib/utils';
+import Badge from '@/components/ui/Badge';
+import ProgressBar, { ProgressTone } from '@/components/ui/ProgressBar';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Input } from '@/components/ui/Field';
 
 interface CountPair {
   total: number;
@@ -28,10 +33,14 @@ interface DsaOverview {
   sections: SheetSection[];
 }
 
-const DIFFICULTY_META: { key: DsaDifficultyFilter; color: string; bar: string }[] = [
-  { key: 'Easy', color: 'text-emerald-400', bar: 'bg-emerald-400' },
-  { key: 'Medium', color: 'text-amber-400', bar: 'bg-amber-400' },
-  { key: 'Hard', color: 'text-rose-400', bar: 'bg-rose-400' },
+const DIFFICULTY_META: {
+  key: DsaDifficultyFilter;
+  color: string;
+  tone: ProgressTone;
+}[] = [
+  { key: 'Easy', color: 'text-emerald-300', tone: 'emerald' },
+  { key: 'Medium', color: 'text-amber-300', tone: 'amber' },
+  { key: 'Hard', color: 'text-rose-300', tone: 'rose' },
 ];
 
 function pct(solved: number, total: number) {
@@ -44,8 +53,8 @@ function ProgressRing({ value, solved, total }: { value: number; solved: number;
   const offset = circumference - (value / 100) * circumference;
 
   return (
-    <div className="relative w-28 h-28 shrink-0">
-      <svg viewBox="0 0 100 100" className="w-28 h-28 -rotate-90">
+    <div className="relative h-28 w-28 shrink-0">
+      <svg viewBox="0 0 100 100" className="-rotate-90 h-28 w-28">
         <circle cx="50" cy="50" r={r} fill="none" strokeWidth="9" className="stroke-white/10" />
         <circle
           cx="50"
@@ -60,8 +69,8 @@ function ProgressRing({ value, solved, total }: { value: number; solved: number;
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-heading font-extrabold text-2xl text-white">{value}%</span>
-        <span className="text-[10px] font-mono text-gray-400">
+        <span className="font-heading text-2xl font-extrabold text-white">{value}%</span>
+        <span className="font-mono text-[10px] text-slate-400">
           {solved}/{total}
         </span>
       </div>
@@ -73,25 +82,28 @@ function DifficultyCard({
   label,
   pair,
   color,
-  bar,
+  tone,
 }: {
   label: string;
   pair: CountPair;
   color: string;
-  bar: string;
+  tone: ProgressTone;
 }) {
-  const value = pct(pair.solved, pair.total);
   return (
-    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+    <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
       <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider">
         <span className={color}>{label}</span>
-        <span className="font-mono text-gray-400 normal-case">
+        <span className="font-mono text-slate-400 normal-case">
           {pair.solved}/{pair.total}
         </span>
       </div>
-      <div className="mt-2.5 h-1.5 rounded-full bg-white/10 overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-500 ${bar}`} style={{ width: `${value}%` }} />
-      </div>
+      <ProgressBar
+        value={pair.solved}
+        max={pair.total}
+        tone={tone}
+        className="mt-2.5"
+        label={`${label} progress`}
+      />
     </div>
   );
 }
@@ -189,7 +201,8 @@ export default function DsaPage() {
   // Keep the sidebar + header stats in sync with optimistic solve toggles.
   const applySolvedDelta = (question: Question, nextStatus: 'SOLVED' | 'NOT_STARTED') => {
     const delta = nextStatus === 'SOLVED' ? 1 : -1;
-    const key = question.difficulty === 'Medium' ? 'medium' : question.difficulty === 'Hard' ? 'hard' : 'easy';
+    const key =
+      question.difficulty === 'Medium' ? 'medium' : question.difficulty === 'Hard' ? 'hard' : 'easy';
 
     setOverview((prev) => {
       if (!prev) return prev;
@@ -222,25 +235,25 @@ export default function DsaPage() {
   const overallPct = totals ? pct(totals.solved, totals.total) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-7">
+    <div className="mx-auto max-w-7xl space-y-7 px-4 py-10 sm:px-6 lg:px-8">
       {/* Back */}
       <Link
         href="/prep"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Prep Hub
+        <ArrowLeft className="h-4 w-4" /> Back to Prep Hub
       </Link>
 
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-cyan-400 font-semibold text-xs uppercase tracking-wider mb-2">
-          <Code2 className="w-4 h-4" />
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-400">
+          <Code2 className="h-4 w-4" />
           Technical Coding Tracks
         </div>
-        <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
+        <h1 className="font-heading text-3xl font-extrabold text-white sm:text-4xl">
           Dedicated DSA Topic Sheet
         </h1>
-        <p className="text-sm text-gray-400 mt-1 max-w-2xl">
+        <p className="mt-1 max-w-2xl text-sm text-slate-400">
           {totals
             ? `${totals.total} problems across ${overview?.sections.length ?? 0} sections, organised by the pattern each one teaches.`
             : 'Curated problem sets categorised by fundamental pattern.'}
@@ -248,38 +261,66 @@ export default function DsaPage() {
       </div>
 
       {loadingOverview ? (
-        <div className="glass-panel rounded-2xl p-10 flex items-center justify-center gap-3 text-gray-400 text-sm">
-          <Loader2 className="w-5 h-5 animate-spin" /> Loading the DSA sheet…
+        <div className="space-y-7">
+          <div className="glass-panel rounded-2xl p-6">
+            <div className="flex flex-col items-center gap-6 md:flex-row">
+              <Skeleton className="h-28 w-28 shrink-0 rounded-full" />
+              <div className="w-full flex-1 space-y-3">
+                <Skeleton className="h-5 w-40" />
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <Skeleton className="h-[74px] rounded-xl" />
+                  <Skeleton className="h-[74px] rounded-xl" />
+                  <Skeleton className="h-[74px] rounded-xl" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <Skeleton className="h-72 rounded-2xl" />
+            <div className="space-y-5">
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-80 rounded-2xl" />
+            </div>
+          </div>
         </div>
       ) : error ? (
-        <div className="glass-panel rounded-2xl p-10 flex items-center justify-center gap-3 text-rose-400 text-sm">
-          <AlertCircle className="w-5 h-5" /> {error}
+        <div className="glass-panel flex flex-col items-center justify-center gap-3 rounded-2xl p-10 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-500/25 bg-rose-500/10 text-rose-400">
+            <AlertCircle className="h-6 w-6" />
+          </div>
+          <p className="text-sm font-semibold text-white">Something went wrong</p>
+          <p className="max-w-sm text-xs text-slate-400">{error}</p>
         </div>
       ) : !overview || overview.sections.length === 0 ? (
-        <div className="glass-panel rounded-2xl p-10 text-center text-sm text-gray-400">
+        <div className="glass-panel rounded-2xl p-10 text-center text-sm text-slate-400">
           No DSA sections available yet.
         </div>
       ) : (
         <>
           {/* Overall progress */}
           <section className="glass-panel rounded-2xl p-6">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <ProgressRing value={overallPct} solved={overview.totals.solved} total={overview.totals.total} />
-              <div className="flex-1 w-full">
-                <div className="flex items-baseline justify-between mb-3">
-                  <h2 className="font-heading font-bold text-lg text-white">Overall Progress</h2>
-                  <span className="text-xs text-gray-400">
+            <div className="flex flex-col items-center gap-6 md:flex-row">
+              <ProgressRing
+                value={overallPct}
+                solved={overview.totals.solved}
+                total={overview.totals.total}
+              />
+              <div className="w-full flex-1">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h2 className="font-heading text-lg font-bold text-white">Overall Progress</h2>
+                  <span className="text-xs text-slate-400">
                     {overview.totals.total - overview.totals.solved} remaining
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {DIFFICULTY_META.map(({ key, color, bar }) => (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {DIFFICULTY_META.map(({ key, color, tone }) => (
                     <DifficultyCard
                       key={key}
                       label={key}
                       pair={overview.totals[key.toLowerCase() as 'easy' | 'medium' | 'hard']}
                       color={color}
-                      bar={bar}
+                      tone={tone}
                     />
                   ))}
                 </div>
@@ -288,41 +329,51 @@ export default function DsaPage() {
           </section>
 
           {/* Sidebar + content */}
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_minmax(0,1fr)] gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
             {/* Section navigation */}
             <aside className="lg:sticky lg:top-24 lg:self-start">
               <div className="glass-panel rounded-2xl p-3">
-                <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
+                <div
+                  role="tablist"
+                  aria-label="DSA sections"
+                  className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible lg:pb-0"
+                >
                   {overview.sections.map((section) => {
                     const active = section.id === selectedId;
                     return (
                       <button
                         key={section.id}
+                        role="tab"
+                        aria-selected={active}
                         onClick={() => setSelectedId(section.id)}
-                        className={`shrink-0 w-44 lg:w-full text-left rounded-xl px-3 py-2.5 border transition-colors ${
+                        className={cn(
+                          'w-44 shrink-0 rounded-xl border px-3 py-2.5 text-left transition-colors lg:w-full',
                           active
-                            ? 'bg-cyan-600/15 border-cyan-500/40'
+                            ? 'border-cyan-500/40 bg-cyan-600/15'
                             : 'border-transparent hover:bg-white/5'
-                        }`}
+                        )}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span
-                            className={`text-xs font-semibold truncate ${
-                              active ? 'text-white' : 'text-gray-300'
-                            }`}
+                            className={cn(
+                              'truncate text-xs font-semibold',
+                              active ? 'text-white' : 'text-slate-300'
+                            )}
                           >
                             {section.name}
                           </span>
-                          <span className="text-[10px] font-mono text-gray-400 shrink-0">
+                          <span className="shrink-0 font-mono text-[10px] text-slate-400">
                             {section.solved}/{section.total}
                           </span>
                         </div>
-                        <div className="mt-1.5 h-1 rounded-full bg-white/10 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-cyan-400 transition-all duration-500"
-                            style={{ width: `${pct(section.solved, section.total)}%` }}
-                          />
-                        </div>
+                        <ProgressBar
+                          value={section.solved}
+                          max={section.total}
+                          tone="cyan"
+                          size="sm"
+                          className="mt-1.5"
+                          label={`${section.name} progress`}
+                        />
                       </button>
                     );
                   })}
@@ -331,37 +382,33 @@ export default function DsaPage() {
             </aside>
 
             {/* Selected section */}
-            <main className="space-y-5 min-w-0">
+            <main className="min-w-0 space-y-5">
               {selectedSection && (
                 <div className="glass-panel rounded-2xl p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                  <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
                     <div className="min-w-0">
-                      <h2 className="font-heading font-extrabold text-2xl text-white">
+                      <h2 className="font-heading text-2xl font-extrabold text-white">
                         {selectedSection.name}
                       </h2>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Master the core patterns and solve the high-frequency problems in this section.
+                      <p className="mt-1 text-xs text-slate-400">
+                        Master the core patterns and solve the high-frequency problems in this
+                        section.
                       </p>
                       {concepts.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
+                        <div className="mt-3 flex flex-wrap gap-1.5">
                           {concepts.map((c) => (
-                            <span
-                              key={c}
-                              className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300"
-                            >
-                              {c}
-                            </span>
+                            <Badge key={c}>{c}</Badge>
                           ))}
                         </div>
                       )}
                     </div>
                     <div className="shrink-0 sm:text-right">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                         Solved
                       </div>
-                      <div className="font-heading font-extrabold text-2xl text-white">
+                      <div className="font-heading text-2xl font-extrabold text-white">
                         {selectedSection.solved}
-                        <span className="text-gray-500 text-lg">/{selectedSection.total}</span>
+                        <span className="text-lg text-slate-500">/{selectedSection.total}</span>
                       </div>
                     </div>
                   </div>
@@ -369,14 +416,15 @@ export default function DsaPage() {
               )}
 
               {/* Toolbar */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="relative w-full max-w-sm">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Filter by problem or pattern…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                    aria-label="Filter problems"
+                    className="pl-10"
                   />
                 </div>
 
@@ -392,15 +440,22 @@ export default function DsaPage() {
                       <button
                         key={level}
                         onClick={() => setDifficulty(level)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                        aria-pressed={active}
+                        className={cn(
+                          'rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors',
                           active
-                            ? 'bg-cyan-600 text-white border-cyan-500'
-                            : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-                        }`}
+                            ? 'border-cyan-500 bg-cyan-600 text-white'
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:text-white'
+                        )}
                       >
                         {level === 'ALL' ? 'All' : level}
                         {pair && (
-                          <span className={`ml-1.5 font-mono ${active ? 'text-cyan-100' : 'text-gray-500'}`}>
+                          <span
+                            className={cn(
+                              'ml-1.5 font-mono',
+                              active ? 'text-cyan-100' : 'text-slate-500'
+                            )}
+                          >
                             {pair.total}
                           </span>
                         )}
@@ -412,8 +467,10 @@ export default function DsaPage() {
 
               {/* Problems */}
               {loadingQuestions ? (
-                <div className="glass-panel rounded-2xl p-10 flex items-center justify-center gap-3 text-gray-400 text-sm">
-                  <Loader2 className="w-5 h-5 animate-spin" /> Loading problems…
+                <div className="glass-panel space-y-3 rounded-2xl p-5">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-11 w-full rounded-lg" />
+                  ))}
                 </div>
               ) : (
                 <DsaTopicSheet
