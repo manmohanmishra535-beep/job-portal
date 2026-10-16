@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Compass, BookOpen, Lightbulb, CheckCircle2, Copy, Check, ArrowLeft } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Button from '@/components/ui/Button';
 
 const APTITUDE_TOPICS = [
   {
@@ -72,118 +74,130 @@ export default function AptitudePage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Back Link */}
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       <Link
         href="/prep"
-        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Prep Hub
+        <ArrowLeft className="h-4 w-4" /> Back to Prep Hub
       </Link>
 
       {/* Header */}
-      <div>
-        <div className="flex items-center gap-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider mb-2">
-          <Compass className="w-4 h-4" />
-          Quantitative & Logical Aptitude
+      <header>
+        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
+          <Compass className="h-4 w-4" />
+          Quantitative &amp; Logical Aptitude
         </div>
-        <h1 className="font-heading font-extrabold text-3xl sm:text-4xl text-white">
-          Aptitude Mastery & Cheat Sheets
+        <h1 className="font-heading text-3xl font-extrabold text-white sm:text-4xl">
+          Aptitude Mastery &amp; Cheat Sheets
         </h1>
-        <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-          High-yield formulas, relative velocity shortcuts, LCM unit work methods, and practice questions tested in TCS NQT, Infosys, and FAANG OAs.
+        <p className="mt-2 max-w-2xl text-sm text-slate-400">
+          High-yield formulas, relative velocity shortcuts, LCM unit work methods, and practice
+          questions tested in TCS NQT, Infosys, and FAANG OAs.
         </p>
+      </header>
+
+      {/* Topic tabs */}
+      <div
+        role="tablist"
+        aria-label="Aptitude topics"
+        className="flex flex-wrap gap-2 border-b border-white/10 pb-3"
+      >
+        {APTITUDE_TOPICS.map((topic) => {
+          const active = selectedTopic.id === topic.id;
+          return (
+            <button
+              key={topic.id}
+              role="tab"
+              aria-selected={active}
+              onClick={() => {
+                setSelectedTopic(topic);
+                setRevealedSolutions({});
+              }}
+              className={cn(
+                'rounded-xl border px-4 py-2 text-xs font-semibold transition-all duration-200',
+                active
+                  ? 'border-indigo-500/50 bg-indigo-600 text-white shadow-[0_10px_30px_-14px_rgba(99,102,241,0.9)]'
+                  : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+              )}
+            >
+              {topic.title}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Topic Selection Tabs */}
-      <div className="flex flex-wrap gap-2 pb-2 border-b border-white/10">
-        {APTITUDE_TOPICS.map((topic) => (
-          <button
-            key={topic.id}
-            onClick={() => {
-              setSelectedTopic(topic);
-              setRevealedSolutions({});
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-              selectedTopic.id === topic.id
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                : 'glass-panel text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            {topic.title}
-          </button>
-        ))}
-      </div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Formulas & Shortcuts (2 cols) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
-            <h2 className="font-heading font-bold text-xl text-white flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-400" />
-              {selectedTopic.title} - High-Yield Formulas
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* Formulas + shortcuts */}
+        <div className="space-y-6 lg:col-span-2">
+          <section className="glass-panel space-y-6 rounded-3xl p-6 sm:p-8">
+            <h2 className="flex items-center gap-2 font-heading text-xl font-bold text-white">
+              <BookOpen className="h-5 w-5 text-indigo-400" />
+              {selectedTopic.title} — High-Yield Formulas
             </h2>
 
             <div className="space-y-3">
               {selectedTopic.formulas.map((item, idx) => (
                 <div
                   key={idx}
-                  className="p-4 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between gap-4 group"
+                  className="flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-white/[0.03] p-4 transition-colors hover:border-white/10"
                 >
-                  <div>
-                    <span className="text-xs font-semibold text-indigo-400 block mb-1">
+                  <div className="min-w-0">
+                    <span className="mb-1 block text-xs font-semibold text-indigo-300">
                       {item.name}
                     </span>
-                    <code className="text-sm font-mono text-cyan-200">{item.formula}</code>
+                    <code className="block break-words font-mono text-sm text-cyan-200">
+                      {item.formula}
+                    </code>
                   </div>
                   <button
                     onClick={() => handleCopy(item.formula)}
-                    className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                    aria-label={`Copy formula: ${item.name}`}
                     title="Copy formula"
+                    className="shrink-0 rounded-lg p-2 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     {copiedFormula === item.formula ? (
-                      <Check className="w-4 h-4 text-emerald-400" />
+                      <Check className="h-4 w-4 text-emerald-400" />
                     ) : (
-                      <Copy className="w-4 h-4" />
+                      <Copy className="h-4 w-4" />
                     )}
                   </button>
                 </div>
               ))}
             </div>
 
-            {/* Shortcuts & Pro Tips */}
-            <div className="p-5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 space-y-2">
+            <div className="space-y-2 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-5">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-300">
-                <Lightbulb className="w-4 h-4 text-amber-400" /> Exam Shortcuts & Elimination Tricks
+                <Lightbulb className="h-4 w-4 text-amber-400" /> Exam Shortcuts &amp; Elimination
+                Tricks
               </div>
-              <ul className="space-y-1.5 text-xs text-gray-300">
+              <ul className="space-y-1.5 text-xs text-slate-300">
                 {selectedTopic.shortcuts.map((tip, idx) => (
                   <li key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-400 font-bold">•</span>
-                    {tip}
+                    <span className="font-bold text-indigo-400">•</span>
+                    <span className="leading-relaxed">{tip}</span>
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
+          </section>
         </div>
 
-        {/* Practice Problem (1 col) */}
+        {/* Practice */}
         <div className="space-y-6">
-          <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4">
-            <h3 className="font-heading font-bold text-lg text-white">Interactive Practice</h3>
+          <section className="glass-panel space-y-4 rounded-3xl p-6 sm:p-8">
+            <h3 className="font-heading text-lg font-bold text-white">Interactive Practice</h3>
             {selectedTopic.practiceProblems.map((prob, idx) => (
               <div key={idx} className="space-y-4">
-                <p className="text-xs text-gray-300 leading-relaxed font-medium">{prob.question}</p>
+                <p className="text-sm font-medium leading-relaxed text-slate-300">{prob.question}</p>
 
                 <div className="space-y-2">
                   {prob.options.map((opt, optIdx) => (
                     <div
                       key={optIdx}
-                      className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-xs text-gray-300 flex items-center gap-2 font-mono"
+                      className="flex items-center gap-2.5 rounded-lg border border-white/5 bg-white/[0.03] p-2.5 font-mono text-xs text-slate-300"
                     >
-                      <span className="w-5 h-5 rounded bg-white/10 flex items-center justify-center text-[10px] text-gray-400 font-bold">
+                      <span className="flex h-5 w-5 items-center justify-center rounded bg-white/10 text-[10px] font-bold text-slate-400">
                         {String.fromCharCode(65 + optIdx)}
                       </span>
                       {opt}
@@ -191,24 +205,25 @@ export default function AptitudePage() {
                   ))}
                 </div>
 
-                <button
+                <Button
+                  variant="secondary"
+                  className="w-full"
                   onClick={() => toggleSolution(idx)}
-                  className="w-full py-2.5 rounded-xl text-xs font-semibold bg-white/10 text-white hover:bg-white/15 transition-colors"
                 >
                   {revealedSolutions[idx] ? 'Hide Solution' : 'View Correct Answer & Explanation'}
-                </button>
+                </Button>
 
                 {revealedSolutions[idx] && (
-                  <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-2 animate-in fade-in">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
-                      <CheckCircle2 className="w-4 h-4" /> Correct Answer: {prob.correct}
+                  <div className="animate-fade-in space-y-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 text-xs">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                      <CheckCircle2 className="h-4 w-4" /> Correct Answer: {prob.correct}
                     </div>
-                    <p className="text-gray-300 leading-relaxed">{prob.explanation}</p>
+                    <p className="leading-relaxed text-slate-300">{prob.explanation}</p>
                   </div>
                 )}
               </div>
             ))}
-          </div>
+          </section>
         </div>
       </div>
     </div>
